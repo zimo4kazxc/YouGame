@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouGram WebTest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            tgBg: '#0f1721', tgCard: '#17212b', tgInput: '#242f3d',
+            tgBlue: '#5288c1', tgBlueHover: '#4374a8', tgSecondary: '#7f91a4',
+            tgBorder: '#2b5278', tgChatBg: '#0e1621', tgHover: '#202b36'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; transition: background-color 0.3s, color 0.3s; }
+    html.dark body { background-color: #0f1721; color: #ffffff; }
+    html.light body { background-color: #f1f1f1; color: #000000; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 3px; }
+    .ghost-avatar { filter: grayscale(100%); opacity: 0.5; }
+    .scam-badge { display: inline-block; background-color: #dc2626; color: white; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 4px; letter-spacing: 0.5px; margin-left: 4px; vertical-align: middle; animation: scamPulse 1.5s infinite; }
+    @keyframes scamPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    .extra-username-badge { display: inline-block; background-color: rgba(82, 136, 193, 0.15); color: #5288c1; font-size: 10px; padding: 2px 6px; border-radius: 6px; margin: 2px; font-weight: 500; }
+    .premium-star { color: #a855f7; margin-left: 4px; vertical-align: middle; cursor: pointer; transition: transform 0.15s; filter: drop-shadow(0 0 3px rgba(168, 85, 247, 0.5)); }
+    .premium-star:hover { transform: scale(1.2); }
+    .channel-badge { display: inline-block; background-color: rgba(82, 136, 193, 0.2); color: #5288c1; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 4px; margin-left: 4px; vertical-align: middle; }
+    .group-badge { display: inline-block; background-color: rgba(34, 197, 94, 0.2); color: #22c55e; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 4px; margin-left: 4px; vertical-align: middle; }
+    .nft-card { background: linear-gradient(135deg, #2b5278 0%, #1a3a5c 100%); border: 2px solid #5288c1; border-radius: 16px; }
+    .nft-badge { background-color: rgba(0,0,0,0.5); color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; }
+    .reaction-pill { background-color: #242f3d; border-radius: 12px; padding: 1px 5px; font-size: 11px; display: inline-flex; align-items: center; gap: 2px; cursor: pointer; user-select: none; border: 1px solid transparent; }
+    .reaction-pill:hover { border-color: #5288c1; }
+    .reaction-pill.active { background-color: #5288c1; color: white; }
+    .reaction-picker { position: absolute; background-color: #17212b; border-radius: 24px; padding: 4px 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); display: flex; gap: 4px; z-index: 100; }
+    .reaction-picker span { font-size: 18px; cursor: pointer; transition: transform 0.1s; }
+    .reaction-picker span:hover { transform: scale(1.3); }
+  </style>
+</head>
+<body class="h-screen w-screen flex flex-col justify-between select-none">
+
+  <!-- AUTH -->
+  <div id="auth-container" class="flex-1 flex items-center justify-center p-4">
+    <div class="dark:bg-tgCard bg-white w-full max-w-md p-8 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 text-center relative overflow-hidden transition-all">
+      <div class="w-20 h-20 bg-tgBlue rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-tgBlue/20">
+        <i class="fa-solid fa-paper-plane text-3xl text-white"></i>
+      </div>
+      <div id="step-phone" class="space-y-4">
+        <div><h2 class="text-2xl font-bold mb-1 dark:text-white text-gray-900">Вход в YouGram</h2><p class="text-tgSecondary text-sm">Введите номер телефона</p></div>
+        <div class="text-left space-y-1"><label class="text-xs text-tgSecondary uppercase font-medium">Номер</label>
+          <input type="text" id="phone-input" placeholder="+..." autocomplete="off" class="w-full bg-gray-100 dark:bg-tgInput dark:text-white text-gray-900 border border-gray-300 dark:border-gray-700 focus:border-tgBlue rounded-xl px-4 py-3 text-base outline-none">
+        </div>
+        <div class="text-left space-y-1"><label class="text-xs text-tgSecondary uppercase font-medium">Тема</label>
+          <select id="step1-theme" onchange="applyTheme(this.value)" class="w-full bg-gray-100 dark:bg-tgInput dark:text-white text-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm outline-none">
+            <option value="dark">Тёмная</option><option value="light">Светлая</option>
+          </select>
+        </div>
+        <button onclick="handlePhoneSubmit()" class="w-full bg-tgBlue hover:bg-tgBlueHover text-white font-medium py-3 rounded-xl transition shadow-md flex items-center justify-center space-x-2"><span>ПРОДОЛЖИТЬ</span><i class="fa-solid fa-arrow-right text-sm"></i></button>
+        <p id="phone-error" class="text-red-400 text-xs hidden"></p>
+      </div>
+      <div id="step-code" class="space-y-5 hidden">
+        <div><h2 class="text-2xl font-bold mb-1 dark:text-white" id="display-phone">+...</h2><p class="text-tgSecondary text-sm">Код подтверждения</p></div>
+        <div class="text-left space-y-1"><label class="text-xs text-tgSecondary uppercase font-medium">Код</label>
+          <input type="text" id="code-input" maxlength="6" placeholder="Код..." autocomplete="off" class="w-full bg-gray-100 dark:bg-tgInput dark:text-white text-gray-900 border border-gray-300 dark:border-gray-700 focus:border-tgBlue rounded-xl px-4 py-3 text-center tracking-widest text-xl font-bold outline-none">
+        </div>
+        <div class="flex gap-2">
+          <button onclick="goToStep('step-phone')" class="w-1/3 bg-gray-200 dark:bg-tgInput hover:bg-gray-300 dark:hover:bg-gray-700 text-tgSecondary font-medium py-3 rounded-xl transition">Назад</button>
+          <button onclick="handleCodeSubmit()" class="w-2/3 bg-tgBlue hover:bg-tgBlueHover text-white font-medium py-3 rounded-xl transition shadow-md">ПОДТВЕРДИТЬ</button>
+        </div>
+        <p id="code-error" class="text-red-400 text-xs hidden"></p>
+      </div>
+      <div id="step-password" class="space-y-5 hidden">
+        <div><h2 class="text-2xl font-bold mb-1 dark:text-white">Облачный пароль</h2><p class="text-tgSecondary text-sm">Введите пароль</p></div>
+        <div class="text-left space-y-1"><label class="text-xs text-tgSecondary uppercase font-medium">Пароль</label>
+          <input type="password" id="cloud-password-input" placeholder="Пароль..." autocomplete="off" class="w-full bg-gray-100 dark:bg-tgInput dark:text-white text-gray-900 border border-gray-300 dark:border-gray-700 focus:border-tgBlue rounded-xl px-4 py-3 text-center tracking-widest text-lg outline-none">
+        </div>
+        <div class="flex gap-2">
+          <button onclick="goToStep('step-code')" class="w-1/3 bg-gray-200 dark:bg-tgInput hover:bg-gray-300 dark:hover:bg-gray-700 text-tgSecondary font-medium py-3 rounded-xl transition">Назад</button>
+          <button onclick="handleCloudPasswordSubmit()" class="w-2/3 bg-tgBlue hover:bg-tgBlueHover text-white font-medium py-3 rounded-xl transition shadow-md">ВОЙТИ</button>
+        </div>
+        <p id="password-error" class="text-red-400 text-xs hidden"></p>
+      </div>
+      <div id="step-register" class="space-y-4 hidden">
+        <div><h2 class="text-2xl font-bold mb-1 dark:text-white">Настройка профиля</h2></div>
+        <div class="flex flex-col items-center space-y-2">
+          <div id="reg-avatar-preview" class="w-20 h-20 rounded-full bg-tgBlue flex items-center justify-center font-bold text-white text-2xl shadow-lg border-2 border-tgBlue overflow-hidden bg-cover bg-center">U</div>
+          <label class="cursor-pointer text-xs bg-gray-200 dark:bg-tgInput hover:bg-gray-300 text-tgBlue border border-gray-300 dark:border-gray-700 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-upload"></i> Аватар
+            <input type="file" id="reg-avatar-file" accept="image/*" class="hidden" onchange="handleRegAvatarUpload(event)">
+          </label>
+        </div>
+        <div class="text-left space-y-3">
+          <div><label class="text-xs text-tgSecondary uppercase font-medium">Имя *</label>
+            <input type="text" id="reg-firstname" placeholder="Имя" oninput="updateRegAvatarPreview()" class="w-full bg-gray-100 dark:bg-tgInput dark:text-white text-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm outline-none">
+          </div>
+          <div><label class="text-xs text-tgSecondary uppercase font-medium">Фамилия</label>
+            <input type="text" id="reg-lastname" placeholder="Фамилия" class="w-full bg-gray-100 dark:bg-tgInput dark:text-white text-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm outline-none">
+          </div>
+          <div><label class="text-xs text-tgSecondary uppercase font-medium">@username</label>
+            <input type="text" id="reg-username" placeholder="username" oninput="checkRegUsername()" class="w-full bg-gray-100 dark:bg-tgInput dark:text-white text-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm outline-none">
+            <p id="reg-username-error" class="text-red-400 text-xs mt-1 hidden"></p>
+          </div>
+          <div><label class="text-xs text-tgSecondary uppercase font-medium">О себе</label>
+            <input type="text" id="reg-bio" placeholder="О себе..." class="w-full bg-gray-100 dark:bg-tgInput dark:text-white text-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm outline-none">
+          </div>
+        </div>
+        <button onclick="handleRegisterSubmit()" class="w-full bg-tgBlue hover:bg-tgBlueHover text-white font-medium py-3 rounded-xl transition shadow-md mt-2">ГОТОВО</button>
+        <p id="reg-error" class="text-red-400 text-xs hidden"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MESSENGER -->
+  <div id="messenger-container" class="flex-1 flex overflow-hidden hidden">
+    <aside class="w-80 md:w-96 dark:bg-tgCard bg-white dark:border-gray-800 border-gray-200 border-r flex flex-col h-full">
+      <div class="p-3 border-b dark:border-gray-800 border-gray-200 flex items-center justify-between">
+        <div class="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition" onclick="openMySelfProfile()">
+          <div id="user-avatar-container" class="relative"><div id="user-avatar" class="w-10 h-10 rounded-full bg-tgBlue flex items-center justify-center font-bold text-white text-lg shadow-sm overflow-hidden bg-cover bg-center">U</div></div>
+          <div class="truncate">
+            <h3 id="user-display-name" class="font-bold text-sm truncate dark:text-white text-gray-900">Пользователь</h3>
+            <p id="user-display-username" class="text-xs text-tgBlue truncate">@username</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-1">
+          <button onclick="openCreateChatModal()" title="Создать" class="text-tgSecondary hover:text-tgBlue p-2 rounded-lg transition"><i class="fa-solid fa-plus"></i></button>
+          <button onclick="openSettingsModal()" title="Настройки" class="text-tgSecondary hover:text-tgBlue p-2 rounded-lg transition"><i class="fa-solid fa-gear"></i></button>
+          <button onclick="logout()" title="Выйти" class="text-tgSecondary hover:text-red-400 p-2 rounded-lg transition"><i class="fa-solid fa-right-from-bracket"></i></button>
+        </div>
+      </div>
+      <div class="p-3 border-b dark:border-gray-800 border-gray-200 space-y-2">
+        <div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-tgSecondary text-sm"></i>
+          <input type="text" id="search-input" onkeyup="handleSearch(this.value)" placeholder="Поиск..." class="w-full bg-gray-100 dark:bg-tgInput dark:text-white text-gray-900 text-sm rounded-xl pl-9 pr-4 py-2 outline-none border border-transparent focus:border-tgBlue transition">
+        </div>
+        <button onclick="openStarInfoModal()" class="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 text-xs font-semibold py-2 rounded-xl transition flex items-center justify-center gap-2"><i class="fa-solid fa-star"></i> Звёзды YouGram</button>
+        <button onclick="openPremiumModal()" class="w-full bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 text-xs font-semibold py-2 rounded-xl transition flex items-center justify-center gap-2"><i class="fa-solid fa-star"></i> YouGram Premium</button>
+      </div>
+      <div id="search-header-label" class="px-4 py-2 text-xs font-semibold text-tgSecondary dark:bg-tgBg/50 bg-gray-100 hidden">РЕЗУЛЬТАТЫ ПОИСКА</div>
+      <div id="chats-list" class="flex-1 overflow-y-auto divide-y dark:divide-gray-800/40 divide-gray-200"></div>
+    </aside>
+    <main class="flex-1 dark:bg-tgChatBg bg-gray-50 flex flex-col justify-between relative">
+      <div id="chat-header" class="p-3 dark:bg-tgCard bg-white dark:border-gray-800 border-gray-200 border-b flex items-center justify-between shadow-sm">
+        <div class="flex items-center space-x-3 cursor-pointer hover:opacity-90 transition" onclick="openTargetUserProfile()">
+          <div id="active-chat-avatar" class="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-white overflow-hidden bg-cover bg-center">?</div>
+          <div><h2 id="active-chat-title" class="font-bold text-sm dark:text-white text-gray-900">Выберите чат</h2><p id="active-chat-subtitle" class="text-xs text-tgSecondary">Нажмите для профиля</p></div>
+        </div>
+        <button id="delete-chat-btn" onclick="confirmDeleteChat()" title="Удалить чат" class="hidden text-tgSecondary hover:text-red-400 p-2 rounded-lg transition"><i class="fa-solid fa-trash-can"></i></button>
+      </div>
+      <div id="messages-container" class="flex-1 p-4 overflow-y-auto space-y-3 flex flex-col">
+        <div id="empty-chat-state" class="m-auto text-center text-tgSecondary max-w-sm p-6 dark:bg-tgCard/50 bg-white rounded-2xl border dark:border-gray-800 border-gray-200 shadow-sm">
+          <i class="fa-solid fa-comments text-4xl mb-3 text-tgBlue"></i>
+          <p class="text-sm">Выберите пользователя в списке слева.</p>
+        </div>
+      </div>
+      <div id="chat-input-area" class="p-3 dark:bg-tgCard bg-white dark:border-gray-800 border-gray-200 border-t flex items-center space-x-2 hidden">
+        <input type="text" id="message-text-input" placeholder="Написать сообщение..." onkeydown="if(event.key==='Enter') sendMessage()" class="flex-1 bg-gray-100 dark:bg-tgInput border dark:border-gray-700 border-gray-300 rounded-xl px-4 py-2.5 text-sm dark:text-white text-gray-900 outline-none focus:border-tgBlue">
+        <button onclick="sendMessage()" class="bg-tgBlue hover:bg-tgBlueHover text-white w-10 h-10 rounded-xl flex items-center justify-center transition"><i class="fa-solid fa-paper-plane"></i></button>
+      </div>
+    </main>
+  </div>
+
+  <!-- ==================== МОДАЛКИ ==================== -->
+
+  <!-- Create Channel/Group -->
+  <div id="create-chat-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="dark:bg-[#17212b] bg-white max-w-sm w-full rounded-2xl border dark:border-gray-800 border-gray-200 shadow-2xl flex flex-col overflow-hidden">
+      <div class="p-4 border-b dark:border-gray-800 border-gray-200 flex justify-between items-center"><h3 class="font-bold text-base dark:text-white">Создать</h3><button onclick="closeCreateChatModal()" class="text-tgSecondary hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+      <div class="p-5 space-y-4">
+        <div class="grid grid-cols-2 gap-3">
+          <button onclick="selectCreateType('channel')" id="create-type-channel" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition border-tgBlue bg-tgBlue/10"><i class="fa-solid fa-bullhorn text-2xl text-tgBlue"></i><span class="text-sm font-bold dark:text-white">Канал</span></button>
+          <button onclick="selectCreateType('group')" id="create-type-group" class="p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-tgInput"><i class="fa-solid fa-users text-2xl text-emerald-400"></i><span class="text-sm font-bold dark:text-white">Группа</span></button>
+        </div>
+        <button onclick="openCreateChatDetails()" class="w-full bg-tgBlue hover:bg-tgBlueHover text-white font-medium py-3 rounded-xl transition shadow-md">ПРОДОЛЖИТЬ</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="create-chat-details-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="dark:bg-[#17212b] bg-white max-w-sm w-full rounded-2xl border dark:border-gray-800 border-gray-200 shadow-2xl flex flex-col overflow-hidden max-h-[90vh]">
+      <div class="p-4 border-b dark:border-gray-800 border-gray-200 flex justify-between items-center"><h3 class="font-bold text-base dark:text-white" id="create-details-title">Новый канал</h3><button onclick="closeCreateChatDetailsModal()" class="text-tgSecondary hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+      <div class="p-5 space-y-4 overflow-y-auto">
+        <div class="flex flex-col items-center space-y-2">
+          <div id="create-avatar-preview" class="w-20 h-20 rounded-full bg-tgBlue flex items-center justify-center font-bold text-white text-2xl shadow-lg overflow-hidden bg-cover bg-center"><i class="fa-solid fa-bullhorn"></i></div>
+          <label class="cursor-pointer text-xs bg-gray-100 dark:bg-tgInput text-tgBlue border border-gray-300 dark:border-gray-700 px-3 py-1.5 rounded-xl flex items-center gap-1.5"><i class="fa-solid fa-upload"></i> Аватар<input type="file" id="create-avatar-file" accept="image/*" class="hidden" onchange="handleCreateAvatarUpload(event)"></label>
+        </div>
+        <div class="text-left space-y-1"><label class="text-xs text-tgSecondary uppercase font-medium">Название *</label><input type="text" id="create-title" placeholder="Название..." maxlength="50" class="w-full bg-gray-100 dark:bg-tgInput dark:text-white rounded-xl px-4 py-2.5 text-sm outline-none"></div>
+        <div class="text-left space-y-1"><label class="text-xs text-tgSecondary uppercase font-medium">@username *</label><input type="text" id="create-username" placeholder="username" oninput="checkCreateUsername()" class="w-full bg-gray-100 dark:bg-tgInput dark:text-white rounded-xl px-4 py-2.5 text-sm outline-none"><p id="create-username-error" class="text-red-400 text-xs mt-1 hidden"></p></div>
+        <div class="text-left space-y-1"><label class="text-xs text-tgSecondary uppercase font-medium">Описание</label><textarea id="create-bio" rows="2" placeholder="Описание..." class="w-full bg-gray-100 dark:bg-tgInput dark:text-white rounded-xl px-4 py-2.5 text-sm outline-none resize-none"></textarea></div>
+        <p id="create-error" class="text-red-400 text-xs hidden"></p>
+      </div>
+      <div class="p-4 border-t dark:border-gray-800 border-gray-200 flex justify-end gap-2"><button onclick="closeCreateChatDetailsModal()" class="bg-gray-200 dark:bg-tgInput text-tgSecondary px-4 py-2 rounded-xl text-xs">Отмена</button><button onclick="createChannelOrGroup()" class="bg-tgBlue text-white px-5 py-2 rounded-xl text-xs">Создать</button></div>
+    </div>
+  </div>
+
+  <!-- Channel Profile -->
+  <div id="channel-profile-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-2 hidden">
+    <div class="dark:bg-[#17212b] bg-white max-w-sm w-full rounded-2xl border dark:border-gray-800 border-gray-200 shadow-2xl flex flex-col overflow-hidden max-h-[95vh] relative">
+      <div class="p-6 text-center relative pt-8">
+        <button onclick="closeChannelProfileModal()" class="absolute right-4 top-4 text-tgSecondary hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+        <div id="cp-avatar" class="w-24 h-24 rounded-full bg-tgBlue flex items-center justify-center font-bold text-white text-3xl shadow-xl mx-auto mb-3 overflow-hidden bg-cover bg-center"><i class="fa-solid fa-bullhorn"></i></div>
+        <h3 id="cp-name" class="font-bold text-lg dark:text-white mb-1">Название</h3>
+        <p id="cp-username" class="text-xs text-tgBlue mb-1">@username</p>
+        <p id="cp-type" class="text-xs text-tgSecondary mb-3">Канал</p>
+        <p id="cp-bio" class="text-xs text-tgSecondary mb-4 px-4">Описание</p>
+        <p class="text-xs text-tgSecondary mb-4"><b id="cp-subs-count">0</b> <span id="cp-subs-label">подписчиков</span></p>
+        <div class="grid grid-cols-2 gap-2 mb-2">
+          <button id="cp-subscribe-btn" onclick="toggleSubscribeChannel()" class="bg-tgBlue hover:bg-tgBlueHover text-white p-2.5 rounded-xl flex flex-col items-center gap-1 transition text-xs"><i class="fa-solid fa-bell text-base"></i> <span id="cp-subscribe-text">Подписаться</span></button>
+          <button id="cp-open-chat-btn" onclick="openChannelChatFromProfile()" class="dark:bg-tgInput bg-gray-100 p-2.5 rounded-xl flex flex-col items-center gap-1 transition text-xs"><i class="fa-solid fa-comment text-base"></i> Открыть чат</button>
+        </div>
+        <div id="cp-owner-controls" class="grid grid-cols-2 gap-2 mt-2 hidden">
+          <button onclick="openEditChannelModal()" class="dark:bg-tgInput bg-gray-100 p-2.5 rounded-xl flex flex-col items-center gap-1 transition text-xs"><i class="fa-solid fa-pen text-base"></i> Изменить</button>
+          <button onclick="openChannelSubscribers()" class="dark:bg-tgInput bg-gray-100 p-2.5 rounded-xl flex flex-col items-center gap-1 transition text-xs"><i class="fa-solid fa-users text-base"></i> Подписчики</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Channel -->
+  <div id="edit-channel-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="dark:bg-[#17212b] bg-white max-w-sm w-full rounded-2xl border dark:border-gray-800 border-gray-200 shadow-2xl flex flex-col overflow-hidden max-h-[90vh]">
+      <div class="p-4 border-b dark:border-gray-800 border-gray-200 flex justify-between items-center"><h3 class="font-bold text-base dark:text-white">Редактировать</h3><button onclick="closeEditChannelModal()" class="text-tgSecondary hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+      <div class="p-5 space-y-4 overflow-y-auto">
+        <div class="flex flex-col items-center space-y-2">
+          <div id="edit-channel-avatar-preview" class="w-20 h-20 rounded-full bg-tgBlue flex items-center justify-center font-bold text-white text-2xl shadow-lg overflow-hidden bg-cover bg-center"><i class="fa-solid fa-bullhorn"></i></div>
+          <label class="cursor-pointer text-xs bg-gray-100 dark:bg-tgInput text-tgBlue border border-gray-300 dark:border-gray-700 px-3 py-1.5 rounded-xl flex items-center gap-1.5"><i class="fa-solid fa-upload"></i> Сменить аватар<input type="file" id="edit-channel-avatar-file" accept="image/*" class="hidden" onchange="handleEditChannelAvatarUpload(event)"></label>
+        </div>
+        <div class="text-left space-y-1"><label class="text-xs text-tgSecondary uppercase font-medium">Название *</label><input type="text" id="edit-channel-title" class="w-full bg-gray-100 dark:bg-tgInput dark:text-white rounded-xl px-4 py-2.5 text-sm outline-none"></div>
+        <div class="text-left space-y-1"><label class="text-xs text-tgSecondary uppercase font-medium">@username *</label><input type="text" id="edit-channel-username" class="w-full bg-gray-100 dark:bg-tgInput dark:text-white rounded-xl px-4 py-2.5 text-sm outline-none"><p id="edit-channel-username-error" class="text-red-400 text-xs mt-1 hidden"></p></div>
+        <div class="text-left space-y-1"><label class="text-xs text-tgSecondary uppercase font-medium">Описание</label><textarea id="edit-channel-bio" rows="2" class="w-full bg-gray-100 dark:bg-tgInput dark:text-white rounded-xl px-4 py-2.5 text-sm outline-none resize-none"></textarea></div>
+        <p id="edit-channel-error" class="text-red-400 text-xs hidden"></p>
+      </div>
+      <div class="p-4 border-t dark:border-gray-800 border-gray-200 flex justify-end gap-2"><button onclick="closeEditChannelModal()" class="bg-gray-200 dark:bg-tgInput text-tgSecondary px-4 py-2 rounded-xl text-xs">Отмена</button><button onclick="saveChannelChanges()" class="bg-tgBlue text-white px-5 py-2 rounded-xl text-xs">Сохранить</button></div>
+    </div>
+  </div>
+
+  <!-- Channel Subscribers -->
+  <div id="channel-subscribers-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="dark:bg-[#17212b] bg-white max-w-sm w-full rounded-2xl border dark:border-gray-800 border-gray-200 shadow-2xl flex flex-col overflow-hidden max-h-[90vh]">
+      <div class="p-4 border-b dark:border-gray-800 border-gray-200 flex justify-between items-center"><h3 class="font-bold text-base dark:text-white">Подписчики</h3><button onclick="closeChannelSubscribersModal()" class="text-tgSecondary hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+      <div id="channel-subscribers-list" class="p-3 overflow-y-auto"></div>
+    </div>
+  </div>
+
+  <!-- Target Profile -->
+  <div id="target-profile-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-2 hidden">
+    <div class="dark:bg-[#17212b] bg-white max-w-sm w-full rounded-2xl border dark:border-gray-800 border-gray-200 shadow-2xl flex flex-col overflow-hidden max-h-[95vh] relative">
+      <div class="p-6 text-center relative pt-8">
+        <button onclick="closeTargetProfileModal()" class="absolute right-4 top-4 text-tgSecondary hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+        <div id="tp-avatar" class="w-24 h-24 rounded-full bg-tgBlue flex items-center justify-center font-bold text-white text-3xl shadow-xl mx-auto mb-3 overflow-hidden bg-cover bg-center">?</div>
+        <h3 id="tp-name" class="font-bold text-lg dark:text-white">Имя</h3>
+        <p id="tp-status" class="text-xs text-tgSecondary mb-3">был(а) недавно</p>
+        <div id="tp-extra-usernames" class="mb-4 flex flex-wrap justify-center gap-1"></div>
+        <div class="grid grid-cols-4 gap-2">
+          <button onclick="closeTargetProfileModal()" class="dark:bg-tgInput bg-gray-100 p-2.5 rounded-xl flex flex-col items-center gap-1 transition text-xs"><i class="fa-solid fa-comment text-base"></i> Чат</button>
+          <button onclick="alert('Уведомления включены')" class="dark:bg-tgInput bg-gray-100 p-2.5 rounded-xl flex flex-col items-center gap-1 transition text-xs"><i class="fa-solid fa-bell text-base"></i> Звук</button>
+          <button onclick="closeTargetProfileModal(); openGiftModal();" class="dark:bg-tgInput bg-gray-100 p-2.5 rounded-xl flex flex-col items-center gap-1 transition text-xs"><i class="fa-solid fa-gift text-base"></i> Подарок</button>
+          <button onclick="closeTargetProfileModal(); openGiftPremiumModal();" class="dark:bg-tgInput bg-gray-100 p-2.5 rounded-xl flex flex-col items-center gap-1 transition text-xs"><i class="fa-solid fa-star text-purple-400 text-base"></i> Premium</button>
+        </div>
+      </div>
+      <div class="p-4 overflow-y-auto space-y-4 text-xs border-t dark:border-gray-800 border-gray-200">
+        <div><p id="tp-bio" class="dark:text-white text-gray-900 font-medium mb-1">О себе</p></div>
+        <div class="flex justify-between items-center">
+          <div><p id="tp-username" class="text-tgBlue font-medium">@username</p></div>
+          <i class="fa-solid fa-qrcode text-tgBlue text-lg"></i>
+        </div>
+        <hr class="border-gray-800/80">
+        <div class="space-y-3 dark:text-gray-200 text-gray-800">
+          <div onclick="openGiftsModalForCurrentProfile()" class="flex items-center space-x-3 cursor-pointer hover:opacity-80"><i class="fa-solid fa-gift text-tgSecondary w-5 text-center"></i><span><b id="tp-gifts-count">0</b> <span id="tp-gifts-label">подарок</span></span></div>
+        </div>
+        <hr class="border-gray-800/80">
+        <button id="add-username-btn" onclick="openAddUsernameModal()" class="hidden w-full flex items-center space-x-3 text-tgBlue hover:opacity-80 py-2 font-medium"><i class="fa-solid fa-plus text-lg w-5 text-center"></i><span>Добавить @username (+100 ⭐)</span></button>
+        <button id="block-btn-element" onclick="promptBlockUser()" class="w-full flex items-center space-x-3 text-red-500 py-2 font-medium"><i id="block-btn-icon" class="fa-solid fa-hand text-lg w-5 text-center"></i><span id="block-btn-text">Заблокировать</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NFT Detail Modal -->
+  <div id="nft-detail-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-2 hidden">
+    <div class="dark:bg-[#17212b] bg-white max-w-sm w-full rounded-2xl border dark:border-gray-800 border-gray-200 shadow-2xl flex flex-col overflow-hidden max-h-[95vh] relative">
+      <div class="p-4 flex justify-between items-center text-tgSecondary">
+        <button onclick="closeNftDetailModal()" class="hover:text-white text-lg"><i class="fa-solid fa-arrow-left"></i></button>
+        <button onclick="closeNftDetailModal()" class="hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="px-6 pb-4 text-center">
+        <div class="relative w-full mb-4 flex items-center justify-center">
+          <img src="Photo11.jpg" alt="Chill Flame" class="w-40 h-40 object-cover rounded-2xl" style="background: linear-gradient(135deg, #2b5278 0%, #1a3a5c 100%);">
+        </div>
+        <h3 id="nft-detail-title" class="font-bold text-xl dark:text-white mb-1">Chill Flame #43 162</h3>
+        <p id="nft-detail-sale" class="text-xs text-tgSecondary mb-1">В продаже за ⭐ 500</p>
+      </div>
+
+      <div class="p-4 space-y-2 text-xs">
+        <div class="dark:bg-tgInput bg-gray-50 rounded-xl p-3 space-y-2">
+          <div class="flex justify-between"><span class="text-tgSecondary">Владелец</span><span id="nft-detail-owner" class="dark:text-white font-medium flex items-center gap-1"><span class="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px]">M</span> msvv</span></div>
+          <div class="flex justify-between"><span class="text-tgSecondary">Модель</span><span class="dark:text-white font-medium">Balinese <span class="text-[10px] bg-tgBlue/20 text-tgBlue px-1.5 py-0.5 rounded ml-1">3%</span></span></div>
+          <div class="flex justify-between"><span class="text-tgSecondary">Узор</span><span class="dark:text-white font-medium">Narcissus <span class="text-[10px] bg-tgBlue/20 text-tgBlue px-1.5 py-0.5 rounded ml-1">0.3%</span></span></div>
+          <div class="flex justify-between"><span class="text-tgSecondary">Фон</span><span class="dark:text-white font-medium">Feldgrau <span class="text-[10px] bg-tgBlue/20 text-tgBlue px-1.5 py-0.5 rounded ml-1">1.2%</span></span></div>
+          <div class="flex justify-between"><span class="text-tgSecondary">Количество</span><span class="dark:text-white font-medium">446 337, выпущено 482 271</span></div>
+          <div class="flex justify-between"><span class="text-tgSecondary">Ценность</span><span class="dark:text-white font-medium text-red-400">−$16.00 <a href="#" class="text-tgBlue hover:underline text-[10px] ml-1">подробнее</a></span></div>
+        </div>
+
+        <div id="nft-owner-actions" class="grid grid-cols-1 gap-2 pt-3 hidden">
+          <button onclick="sellNft()" class="w-full bg-amber-500 hover:bg-amber-600 text-white py-3 rounded-xl font-medium text-sm transition shadow-md">
+            Продать за ⭐ 500
+          </button>
+        </div>
+
+        <div id="nft-buyer-actions" class="grid grid-cols-1 gap-2 pt-3 hidden">
+          <button onclick="buyNft()" class="w-full bg-tgBlue hover:bg-tgBlueHover text-white py-3 rounded-xl font-medium text-sm transition shadow-md">
+            Купить за ⭐ 300
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NFT Gallery -->
+  <div id="nft-gallery-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-2 hidden">
+    <div class="dark:bg-[#17212b] bg-white max-w-md w-full rounded-2xl border dark:border-gray-800 border-gray-200 shadow-2xl flex flex-col overflow-hidden max-h-[90vh] relative">
+      <div class="p-4 border-b dark:border-gray-800 border-gray-200 flex justify-between items-center">
+        <h3 class="font-bold text-base dark:text-white">NFT Подарки</h3>
+        <button onclick="closeNftGalleryModal()" class="text-tgSecondary hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div id="nft-gallery-content" class="p-4 overflow-y-auto"></div>
+      <div class="p-4 border-t dark:border-gray-800 border-gray-200 flex justify-end">
+        <button onclick="closeNftGalleryModal()" class="bg-tgBlue hover:bg-tgBlueHover text-white px-5 py-2 rounded-xl text-xs">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div id="settings-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-2 hidden">
+    <div class="dark:bg-[#17212b] bg-white max-w-sm w-full rounded-2xl border dark:border-gray-800 border-gray-200 shadow-2xl flex flex-col overflow-hidden max-h-[90vh]">
+      <div class="p-4 border-b dark:border-gray-800/80 border-gray-200 flex justify-between items-center"><h3 class="font-bold text-base dark:text-white">Настройки</h3><button onclick="closeSettingsModal()" class="text-tgSecondary hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+      <div class="overflow-y-auto divide-y dark:divide-gray-800/60 divide-gray-200 text-sm">
+        <div class="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-tgHover cursor-pointer" onclick="openMySelfProfile()">
+          <div class="flex items-center space-x-3"><div id="st-avatar" class="w-14 h-14 rounded-full bg-tgBlue flex items-center justify-center font-bold text-white text-xl overflow-hidden bg-cover bg-center">U</div>
+            <div><h4 id="st-name" class="font-bold dark:text-white text-base">Имя</h4><p id="st-phone" class="text-xs text-tgSecondary">+000 000</p><p id="st-username" class="text-xs text-tgBlue">@username</p></div>
+          </div>
+        </div>
+        <div class="py-2">
+          <div onclick="openEditAccountModal()" class="px-4 py-2.5 flex items-center space-x-4 hover:bg-gray-100 dark:hover:bg-tgHover cursor-pointer"><i class="fa-regular fa-user w-5 text-center text-tgSecondary"></i><span>Мой аккаунт</span></div>
+          <div onclick="openPrivacyModal()" class="px-4 py-2.5 flex items-center space-x-4 hover:bg-gray-100 dark:hover:bg-tgHover cursor-pointer"><i class="fa-solid fa-lock w-5 text-center text-tgSecondary"></i><span>Конфиденциальность</span></div>
+          <div onclick="openPremiumModal()" class="px-4 py-2.5 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-tgHover cursor-pointer">
+            <div class="flex items-center space-x-4"><i class="fa-solid fa-star w-5 text-center text-purple-400"></i><span>YouGram Premium</span></div>
+            <span id="st-premium-label" class="text-purple-400 text-xs">Не активен</span>
+          </div>
+        </div>
+        <div class="py-2">
+          <div onclick="closeSettingsModal(); openStarInfoModal();" class="px-4 py-2.5 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-tgHover cursor-pointer">
+            <div class="flex items-center space-x-4"><i class="fa-solid fa-star w-5 text-center text-amber-400"></i><span>Мои звёзды</span></div>
+            <span id="st-stars" class="text-tgBlue font-bold text-xs">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Privacy -->
+  <div id="privacy-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="dark:bg-tgCard bg-white max-w-sm w-full rounded-2xl border dark:border-gray-800 border-gray-200 shadow-2xl flex flex-col overflow-hidden">
+      <div class="p-4 border-b dark:border-gray-800 border-gray-200 flex items-center justify-between">
+        <div class="flex items-center gap-3"><button onclick="closePrivacyModal()" class="text-tgSecondary hover:text-white"><i class="fa-solid fa-arrow-left"></i></button><h3 class="font-bold text-base dark:text-white">Конфиденциальность</h3></div>
+        <button onclick="closePrivacyModal()" class="text-tgSecondary hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div class="p-4 space-y-3">
+        <div onclick="toggleCloudPassword()" class="flex items-center justify-between p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-tgHover cursor-pointer transition"><div class="flex items-center gap-3"><i class="fa-solid fa-shield-halved text-tgSecondary"></i><span class="text-sm dark:text-white">Облачный пароль</span></div><span id="cloud-password-status" class="text-sm font-medium text-tgSecondary">Выкл.</span></div>
+        <div onclick="toggleHideBirthday()" class="flex items-center justify-between p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-tgHover cursor-pointer transition"><div class="flex items-center gap-3"><i class="fa-solid fa-cake-candles text-tgSecondary"></i><span class="text-sm dark:text-white">Скрыть дату рождения</span></div><span id="hide-birthday-status" class="text-sm font-medium text-tgSecondary">Выкл.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Premium -->
+  <div id="premium-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="dark:bg-[#17212b] bg-white max-w-sm w-full rounded-2xl border dark:border-gray-800 border-gray-200 shadow-2xl flex flex-col overflow-hidden text-center relative">
+      <div class="p-4 flex justify-between items-center text-tgSecondary"><button onclick="closePremiumModal()" class="hover:text-white text-lg"><i class="fa-solid fa-arrow-left"></i></button><button onclick="closePremiumModal()" class="hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="px-6 pb-6 pt-2">
+        <div class="relative w-24 h-24 mx-auto mb-4 flex items-center justify-center"><i class="fa-solid fa-star text-6xl text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]"></i></div>
+        <h3 class="font-bold text-xl dark:text-white mb-2">YouGram Premium</h3>
+        <div class="space-y-3 mb-5">
+          <div id="premium-yearly" onclick="selectPremiumOption('yearly')" class="flex items-center justify-between p-3 rounded-xl border-2 border-purple-400 bg-purple-500/10 cursor-pointer"><div class="text-left"><span class="text-sm font-bold dark:text-white">Ежегодно</span></div><p class="text-xs text-purple-400 font-bold">500 ⭐</p></div>
+          <div id="premium-monthly" onclick="selectPremiumOption('monthly')" class="flex items-center justify-between p-3 rounded-xl border-2 border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-tgInput cursor-pointer"><div class="text-left"><span class="text-sm font-bold dark:text-white">Ежемесячно</span></div><p class="text-xs text-purple-400 font-bold">250 ⭐</p></div>
+        </div>
+        <button onclick="buyPremium()" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-3 rounded-xl font-medium text-sm transition shadow-md">Оформить подписку</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gift Premium -->
+  <div id="gift-premium-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="dark:bg-[#17212b] bg-white max-w-sm w-full rounded-2xl border dark:border-gray-800 border-gray-200 shadow-2xl flex flex-col overflow-hidden">
+      <div class="p-4 border-b dark:border-gray-800 border-gray-200 flex justify-between items-center"><h3 class="font-bold text-base dark:text-white">Подарить Premium</h3><button onclick="closeGiftPremiumModal()" class="text-tgSecondary hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+      <div class="p-5 space-y-4">
+        <p id="gift-premium-recipient" class="text-xs text-tgSecondary">Получатель: <b id="gift-premium-name">...</b></p>
+        <div class="space-y-3">
+          <div onclick="selectGiftPremiumOption('yearly')" id="gift-premium-yearly" class="flex items-center justify-between p-3 rounded-xl border-2 border-purple-400 bg-purple-500/10 cursor-pointer"><span class="text-sm font-bold dark:text-white">Ежегодно</span><p class="text-xs text-purple-400 font-bold">500 ⭐</p></div>
+          <div onclick="selectGiftPremiumOption('monthly')" id="gift-premium-monthly" class="flex items-center justify-between p-3 rounded-xl border-2 border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-tgInput cursor-pointer"><span class="text-sm font-bold dark:text-white">Ежемесячно</span><p class="text-xs text-purple-400 font-bold">250 ⭐</p></div>
+        </div>
+        <p id="gift-premium-error" class="text-red-400 text-xs hidden"></p>
+      </div>
+      <div class="p-4 border-t dark:border-gray-800 border-gray-200 flex justify-end gap-2"><button onclick="closeGiftPremiumModal()" class="bg-gray-200 dark:bg-tgInput text-tgSecondary px-4 py-2 rounded-xl text-xs">Отмена</button><button onclick="confirmGiftPremium()" class="bg-purple-500 text-white px-5 py-2 rounded-xl text-xs">Подарить</button></div>
+    </div>
+  </div>
+
+  <!-- Premium Info -->
+  <div id="premium-info-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="dark:bg-[#17212b] bg-white max-w-sm w-full rounded-2xl border dark:border-gray-800 border-gray-200 shadow-2xl flex flex-col overflow-hidden text-center relative p-6">
+      <button onclick="closePremiumInfoModal()" class="absolute right-4 top-4 text-tgSecondary hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+      <div class="relative w-32 h-32 mx-auto mb-4 flex items-center justify-center"><i class="fa-solid fa-star text-7xl text-purple-400 drop-shadow-[0_0_20px_rgba(168,85,247,0.6)]"></i></div>
+      <h3 id="premium-info-title" class="font-bold text-lg dark:text-white mb-2">Пользователь является обладателем подписки YouGram Premium.</h3>
+      <p class="text-xs text-tgSecondary leading-relaxed">Подписчики YouGram Premium имеют эксклюзивный доступ к множеству дополнительных функций.</p>
+    </div>
+  </div>
+
+  <!-- Star Info -->
+  <div id="star-info-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="dark:bg-[#17212b] bg-white max-w-sm w-full rounded-2xl border dark:border-gray-800 border-gray-200 shadow-2xl flex flex-col overflow-hidden text-center relative">
+      <div class="p-4 flex justify-between items-center text-tgSecondary"><button onclick="closeStarInfoModal()" class="hover:text-white text-lg"><i class="fa-solid fa-arrow-left"></i></button><button onclick="closeStarInfoModal()" class="hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="px-6 pb-6 pt-2">
+        <div class="relative w-24 h-24 mx-auto mb-4 flex items-center justify-center"><i class="fa-solid fa-star text-6xl text-amber-400"></i></div>
+        <h3 class="font-bold text-xl dark:text-white mb-2">Звёзды YouGram</h3>
+        <button onclick="openStarClickerFromInfo()" class="w-full bg-tgBlue hover:bg-tgBlueHover text-white py-3 rounded-xl font-medium text-sm transition mb-4">Пополнить баланс</button>
+        <p class="text-sm dark:text-gray-300 text-gray-700 font-medium">Ваш баланс: ⭐ <span id="star-info-balance">0</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Star Clicker -->
+  <div id="star-clicker-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="dark:bg-tgCard bg-white max-w-sm w-full rounded-2xl border dark:border-gray-800 border-gray-200 shadow-2xl flex flex-col overflow-hidden text-center p-6 relative">
+      <button onclick="closeStarClicker()" class="absolute right-4 top-4 text-tgSecondary hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+      <h3 class="font-bold text-xl dark:text-white mb-1">Кликер Звёзд</h3>
+      <div onclick="clickStar()" class="w-32 h-32 bg-amber-500/20 border-2 border-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 cursor-pointer hover:scale-105 transition"><i class="fa-solid fa-star text-6xl text-amber-400"></i></div>
+      <p class="text-sm font-bold dark:text-white mb-4">Баланс: <span id="clicker-balance" class="text-amber-500 text-lg">0</span> ⭐</p>
+      <button onclick="closeStarClicker()" class="w-full bg-tgBlue hover:bg-tgBlueHover text-white py-2.5 rounded-xl text-xs">Готово</button>
+    </div>
+  </div>
+
+  <!-- Delete Chat -->
+  <div id="delete-chat-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="dark:bg-[#17212b] bg-white max-w-xs w-full rounded-2xl border dark:border-gray-800 border-gray-200 shadow-2xl p-5 space-y-4">
+      <h3 class="font-bold text-base dark:text-white">Удалить чат?</h3>
+      <p class="text-xs dark:text-gray-300">Все сообщения будут удалены навсегда.</p>
+      <div class="flex justify-end gap-4 pt-2 text-xs font-semibold"><button onclick="closeDeleteChatModal()" class="text-tgBlue hover:underline">Отмена</button><button onclick="confirmDeleteChatAction()" class="text-red-500 hover:underline">Удалить</button></div>
+    </div>
+  </div>
+
+  <!-- Edit Profile -->
+  <div id="profile-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="dark:bg-tgCard bg-white max-w-md w-full rounded-2xl border dark:border-gray-800 border-gray-200 shadow-2xl flex flex-col overflow-hidden">
+      <div class="p-4 border-b dark:border-gray-800 border-gray-200 flex justify-between items-center"><h3 class="font-bold text-base dark:text-white">Редактировать профиль</h3><button onclick="closeProfileModal()" class="text-tgSecondary hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+      <div class="p-5 space-y-3">
+        <div class="flex flex-col items-center space-y-2">
+          <div id="edit-avatar-preview" class="w-24 h-24 rounded-full bg-tgBlue flex items-center justify-center font-bold text-white text-3xl overflow-hidden bg-cover bg-center">U</div>
+          <div class="flex gap-2">
+            <label class="cursor-pointer text-xs bg-gray-100 dark:bg-tgInput text-tgBlue px-3 py-1.5 rounded-xl flex items-center gap-1.5"><i class="fa-solid fa-upload"></i> Загрузить<input type="file" id="avatar-file-input" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)"></label>
+            <button onclick="removeAvatar()" class="text-xs bg-gray-100 dark:bg-tgInput text-red-400 px-3 py-1.5 rounded-xl">Удалить</button>
+          </div>
+        </div>
+        <div class="space-y-2 text-left">
+          <input type="text" id="edit-firstname" placeholder="Имя" class="w-full bg-gray-100 dark:bg-tgInput rounded-xl px-4 py-2 text-sm dark:text-white outline-none">
+          <input type="text" id="edit-lastname" placeholder="Фамилия" class="w-full bg-gray-100 dark:bg-tgInput rounded-xl px-4 py-2 text-sm dark:text-white outline-none">
+          <input type="text" id="edit-username" placeholder="username" class="w-full bg-gray-100 dark:bg-tgInput rounded-xl px-4 py-2 text-sm dark:text-white outline-none">
+          <input type="date" id="edit-birthday" class="w-full bg-gray-100 dark:bg-tgInput rounded-xl px-4 py-2 text-sm dark:text-white outline-none">
+          <textarea id="edit-bio" rows="2" placeholder="О себе" class="w-full bg-gray-100 dark:bg-tgInput rounded-xl px-4 py-2 text-sm dark:text-white outline-none resize-none"></textarea>
+        </div>
+      </div>
+      <div class="p-4 border-t dark:border-gray-800 border-gray-200 flex justify-end gap-2"><button onclick="closeProfileModal()" class="bg-gray-200 dark:bg-tgInput text-tgSecondary px-4 py-2 rounded-xl text-xs">Отмена</button><button onclick="saveProfileChanges()" class="bg-tgBlue text-white px-5 py-2 rounded-xl text-xs">Сохранить</button></div>
+    </div>
+  </div>
+
+  <!-- Gift Modal -->
+  <div id="gift-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="dark:bg-tgCard bg-white max-w-2xl w-full rounded-2xl border dark:border-gray-800 border-gray-200 shadow-2xl flex flex-col overflow-hidden p-6 relative max-h-[90vh] overflow-y-auto">
+      <button onclick="closeGiftModal()" class="absolute right-4 top-4 text-tgSecondary hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+      <h3 class="font-bold text-lg dark:text-white text-center mb-4">Отправить подарок</h3>
+      <input type="text" id="gift-text-input" placeholder="Сообщение к подарку..." maxlength="80" class="w-full bg-gray-100 dark:bg-tgInput rounded-xl px-4 py-2.5 text-sm dark:text-white outline-none mb-4">
+      <div class="flex justify-center gap-4 flex-wrap">
+        <div onclick="sendGift('Мишка', 15, 'bear')" class="dark:bg-tgInput bg-gray-100 border border-amber-500/40 p-3 rounded-2xl flex flex-col items-center cursor-pointer w-32"><img id="gift-bear-img" src="Photo1.jpg" class="w-16 h-16 rounded-xl mb-2"><span class="text-xs font-bold dark:text-white">Мишка</span><span class="text-[11px] text-amber-500">⭐ 15</span></div>
+        <div onclick="sendGift('Роза', 25, 'rose')" class="dark:bg-tgInput bg-gray-100 border border-amber-500/40 p-3 rounded-2xl flex flex-col items-center cursor-pointer w-32"><img id="gift-rose-img" src="Photo4.jpg" class="w-16 h-16 rounded-xl mb-2"><span class="text-xs font-bold dark:text-white">Роза</span><span class="text-[11px] text-amber-500">⭐ 25</span></div>
+        <div onclick="sendGift('Секретная коробка', 30, 'box')" class="dark:bg-tgInput bg-gray-100 border border-amber-500/40 p-3 rounded-2xl flex flex-col items-center cursor-pointer w-32"><img id="gift-box-img" src="Photo5.jpg" class="w-16 h-16 rounded-xl mb-2"><span class="text-xs font-bold dark:text-white">Секретная коробка</span><span class="text-[11px] text-amber-500">⭐ 30</span></div>
+        <div onclick="sendGift('Торт', 45, 'cake')" class="dark:bg-tgInput bg-gray-100 border border-amber-500/40 p-3 rounded-2xl flex flex-col items-center cursor-pointer w-32"><img id="gift-cake-img" src="Photo7.jpg" class="w-16 h-16 rounded-xl mb-2"><span class="text-xs font-bold dark:text-white">Торт</span><span class="text-[11px] text-amber-500">⭐ 45</span></div>
+        <div onclick="sendGift('Кубок', 90, 'cup')" class="dark:bg-tgInput bg-gray-100 border border-amber-500/40 p-3 rounded-2xl flex flex-col items-center cursor-pointer w-32"><img id="gift-cup-img" src="Photo9.jpg" class="w-16 h-16 rounded-xl mb-2"><span class="text-xs font-bold dark:text-white">Кубок</span><span class="text-[11px] text-amber-500">⭐ 90</span></div>
+        <div onclick="sendNftGift()" class="dark:bg-tgInput bg-gray-100 border-2 border-purple-500 p-3 rounded-2xl flex flex-col items-center cursor-pointer w-32">
+          <img src="Photo11.jpg" class="w-16 h-16 rounded-xl mb-2">
+          <span class="text-xs font-bold dark:text-white">Chill Flame</span>
+          <span class="text-[11px] text-purple-400 font-semibold">⭐ 300 NFT</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================================
+       DATABASE
+       ========================================================================= */
+    const DEFAULT_USERS = {
+      "+000 000": { phone:"+000 000", first_name:"Поддержка", last_name:"YouGram", username:"support", extra_usernames:[], bio:"Поддержка YouGram", avatar:"", stars:100, gifts:[], nfts:[], blocked:{}, theme:"dark", is_support:true, is_registered:true, is_verified:false, cloud_password:null, is_banned:false, has_scam:false, is_premium:false, hide_birthday:false, birthday:"" },
+      "AdminPanel": { phone:"AdminPanel", first_name:"AdminPanel", last_name:"", username:"admin_panel", extra_usernames:[], bio:"Бот управления YouGram", avatar:"", stars:0, gifts:[], nfts:[], blocked:{}, theme:"dark", is_support:false, is_registered:true, is_verified:true, is_bot:true, cloud_password:null, is_banned:false, has_scam:false, is_premium:false, hide_birthday:false, birthday:"" }
+    };
+    const GIFT_PRICES = { bear:15, rose:25, box:30, cake:45, cup:90 };
+
+    function loadDatabase() {
+      const storedUsers = localStorage.getItem('yougram_users');
+      let users = storedUsers ? JSON.parse(storedUsers) : DEFAULT_USERS;
+      if (!users["AdminPanel"]) users["AdminPanel"] = DEFAULT_USERS["AdminPanel"];
+      const storedMessages = localStorage.getItem('yougram_messages');
+      const messages = storedMessages ? JSON.parse(storedMessages) : {};
+      const storedChannels = localStorage.getItem('yougram_channels');
+      const channels = storedChannels ? JSON.parse(storedChannels) : {};
+      const storedNfts = localStorage.getItem('yougram_nfts');
+      let nfts = storedNfts ? JSON.parse(storedNfts) : null;
+      if (!nfts) {
+        // Инициализация 30 NFT
+        nfts = {};
+        for (let i = 1; i <= 30; i++) {
+          nfts['nft_' + i] = {
+            id: 'nft_' + i,
+            name: 'Chill Flame #' + i,
+            image: 'Photo11.jpg',
+            ownerPhone: null,
+            forSale: false,
+            salePrice: 500,
+            model: 'Balinese',
+            modelRarity: '3%',
+            pattern: 'Narcissus',
+            patternRarity: '0.3%',
+            background: 'Feldgrau',
+            backgroundRarity: '1.2%',
+            totalCount: 30,
+            released: 30,
+            value: '−$16.00'
+          };
+        }
+      }
+      const currentPhone = sessionStorage.getItem('yougram_current_phone');
+      return { users, messages, channels, nfts, currentPhone };
+    }
+    let LOCAL_DB = loadDatabase();
+
+    function saveDatabase() {
+      localStorage.setItem('yougram_users', JSON.stringify(LOCAL_DB.users));
+      localStorage.setItem('yougram_messages', JSON.stringify(LOCAL_DB.messages));
+      localStorage.setItem('yougram_channels', JSON.stringify(LOCAL_DB.channels));
+      localStorage.setItem('yougram_nfts', JSON.stringify(LOCAL_DB.nfts));
+      if (authState.currentUser) sessionStorage.setItem('yougram_current_phone', authState.currentUser.phone);
+      else sessionStorage.removeItem('yougram_current_phone');
+    }
+    function refreshDatabaseFromStorage() { LOCAL_DB = loadDatabase(); }
+    function isOwner() { return authState.currentUser && authState.currentUser.phone === "+888 000 0000"; }
+
+    let authState = {
+      phone:'', currentUser:null, activeChatUser:null, userToBlock:null,
+      pendingPhone:null, pendingCode:null, profileUser:null, giftToSell:null,
+      currentRecipientGift:null, chatToDelete:null, selectedPremium:'yearly',
+      giftPremiumOption:'yearly', createType:'channel', tempCreateAvatar:'',
+      tempEditChannelAvatar:'', activeChannel:null, channelsProfile:null,
+      currentNftDetail:null, reactionPickerMsg:null, reactionPickerAnchor:null
+    };
+    let tempRegAvatar = "", tempEditAvatar = "", pollInterval = null;
+
+    function applyTheme(theme) {
+      const htmlEl = document.documentElement;
+      const bearImg = document.getElementById('gift-bear-img');
+      const roseImg = document.getElementById('gift-rose-img');
+      const boxImg = document.getElementById('gift-box-img');
+      const cakeImg = document.getElementById('gift-cake-img');
+      const cupImg = document.getElementById('gift-cup-img');
+      if (theme === 'light') {
+        htmlEl.classList.remove('dark'); htmlEl.classList.add('light');
+        if (bearImg) bearImg.src="Photo2.jpg"; if (roseImg) roseImg.src="Photo3.jpg";
+        if (boxImg) boxImg.src="Photo6.jpg"; if (cakeImg) cakeImg.src="Photo8.jpg";
+        if (cupImg) cupImg.src="Photo10.jpg";
+      } else {
+        htmlEl.classList.remove('light'); htmlEl.classList.add('dark');
+        if (bearImg) bearImg.src="Photo1.jpg"; if (roseImg) roseImg.src="Photo4.jpg";
+        if (boxImg) boxImg.src="Photo5.jpg"; if (cakeImg) cakeImg.src="Photo7.jpg";
+        if (cupImg) cupImg.src="Photo9.jpg";
+      }
+    }
+    function changeTheme(theme) {
+      applyTheme(theme);
+      if (authState.currentUser) { authState.currentUser.theme = theme; LOCAL_DB.users[authState.currentUser.phone] = authState.currentUser; saveDatabase(); }
+    }
+
+    window.addEventListener('storage', () => {
+      refreshDatabaseFromStorage();
+      if (authState.currentUser) {
+        authState.currentUser = LOCAL_DB.users[authState.currentUser.phone];
+        renderChats();
+        if (authState.activeChatUser) renderMessages();
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (LOCAL_DB.currentPhone) {
+        const savedUser = LOCAL_DB.users[LOCAL_DB.currentPhone];
+        const bannedPhones = LOCAL_DB.banned_phones || [];
+        if (!savedUser || savedUser.is_banned || bannedPhones.includes(savedUser.phone)) {
+          sessionStorage.removeItem('yougram_current_phone'); goToStep('step-phone'); return;
+        }
+        authState.currentUser = savedUser;
+        applyTheme(savedUser.theme || 'dark');
+        openMessenger();
+      } else goToStep('step-phone');
+    });
+
+    function goToStep(stepId) {
+      ['step-phone','step-code','step-password','step-register'].forEach(id => document.getElementById(id).classList.add('hidden'));
+      document.getElementById(stepId).classList.remove('hidden');
+      ['phone-error','code-error','password-error','reg-error'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    }
+
+    /* =========================================================================
+       AUTH
+       ========================================================================= */
+    function handlePhoneSubmit() {
+      refreshDatabaseFromStorage();
+      const phone = document.getElementById('phone-input').value.trim();
+      const errorEl = document.getElementById('phone-error');
+      const selectedTheme = document.getElementById('step1-theme').value;
+      if (!phone) { errorEl.innerText="Введите номер"; errorEl.classList.remove('hidden'); return; }
+      const bannedPhones = LOCAL_DB.banned_phones || [];
+      if (bannedPhones.includes(phone)) { errorEl.innerText="🚫 Ваш аккаунт был забанен владельцем проекта YouGram."; errorEl.classList.remove('hidden'); return; }
+      authState.phone = phone; authState.pendingPhone = phone;
+      applyTheme(selectedTheme);
+      if (phone === "+000 000") {
+        if (!LOCAL_DB.users["+000 000"]) LOCAL_DB.users["+000 000"] = DEFAULT_USERS["+000 000"];
+        authState.currentUser = LOCAL_DB.users["+000 000"];
+        authState.currentUser.theme = selectedTheme;
+        saveDatabase(); openMessenger(); return;
+      }
+      document.getElementById('display-phone').innerText = phone;
+      document.getElementById('code-input').value = '';
+      goToStep('step-code');
+    }
+
+    function handleCodeSubmit() {
+      refreshDatabaseFromStorage();
+      const code = document.getElementById('code-input').value.trim();
+      const errorEl = document.getElementById('code-error');
+      const phone = authState.phone;
+      let isValid = false;
+      if (phone === "+888 000 0000") isValid = (code === "6767");
+      else if (phone === "+7 777 777 77 77") isValid = (code === "1337");
+      else if (phone === "+999 999") isValid = (code === "1111");
+      else if (phone === "+000 000") isValid = (code === "2222");
+      else isValid = (code.length >= 4 && !isNaN(code));
+      if (!isValid) { errorEl.innerText="Неверный код!"; errorEl.classList.remove('hidden'); return; }
+      const bannedPhones = LOCAL_DB.banned_phones || [];
+      const user = LOCAL_DB.users[phone];
+      if (bannedPhones.includes(phone) || (user && user.is_banned)) { errorEl.innerText="🚫 Ваш аккаунт был забанен владельцем проекта YouGram."; errorEl.classList.remove('hidden'); return; }
+      if (user && user.is_registered) {
+        if (user.cloud_password) { authState.pendingCode = code; document.getElementById('cloud-password-input').value=''; goToStep('step-password'); return; }
+        authState.currentUser = user; applyTheme(user.theme||'dark'); saveDatabase(); openMessenger();
+      } else {
+        tempRegAvatar = ""; document.getElementById('reg-firstname').value="";
+        document.getElementById('reg-lastname').value="";
+        document.getElementById('reg-username').value="";
+        document.getElementById('reg-bio').value="";
+        updateRegAvatarPreview(); goToStep('step-register');
+      }
+    }
+
+    function handleCloudPasswordSubmit() {
+      refreshDatabaseFromStorage();
+      const input = document.getElementById('cloud-password-input').value.trim();
+      const errorEl = document.getElementById('password-error');
+      const user = LOCAL_DB.users[authState.phone];
+      if (!user) { errorEl.innerText="Пользователь не найден"; errorEl.classList.remove('hidden'); return; }
+      if (user.cloud_password !== input) { errorEl.innerText="Неверный пароль!"; errorEl.classList.remove('hidden'); return; }
+      authState.currentUser = user; applyTheme(user.theme||'dark'); saveDatabase(); openMessenger();
+    }
+
+    function handleRegAvatarUpload(e) {
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => { tempRegAvatar = ev.target.result; updateRegAvatarPreview(); };
+      reader.readAsDataURL(file);
+    }
+    function updateRegAvatarPreview() {
+      const prevEl = document.getElementById('reg-avatar-preview');
+      const name = document.getElementById('reg-firstname').value || 'U';
+      if (tempRegAvatar) { prevEl.style.backgroundImage = `url('${tempRegAvatar}')`; prevEl.innerText=''; }
+      else { prevEl.style.backgroundImage=''; prevEl.innerText = name.charAt(0).toUpperCase(); }
+    }
+
+    function isUsernameTaken(username, excludePhone=null) {
+      if (Object.values(LOCAL_DB.users).some(u => {
+        if (excludePhone && u.phone === excludePhone) return false;
+        if (u.username && u.username.toLowerCase() === username) return true;
+        if (u.extra_usernames && u.extra_usernames.some(x => x.toLowerCase() === username)) return true;
+        return false;
+      })) return true;
+      if (Object.values(LOCAL_DB.channels).some(c => c.username.toLowerCase() === username)) return true;
+      return false;
+    }
+
+    function checkRegUsername() {
+      const u = document.getElementById('reg-username').value.trim().toLowerCase();
+      const err = document.getElementById('reg-username-error');
+      if (!u) { err.classList.add('hidden'); return true; }
+      if (isUsernameTaken(u)) { err.innerText="Этот username уже занят!"; err.classList.remove('hidden'); return false; }
+      err.classList.add('hidden'); return true;
+    }
+
+    function handleRegisterSubmit() {
+      refreshDatabaseFromStorage();
+      const firstName = document.getElementById('reg-firstname').value.trim();
+      const lastName = document.getElementById('reg-lastname').value.trim();
+      const usernameInput = document.getElementById('reg-username').value.trim().toLowerCase();
+      const bio = document.getElementById('reg-bio').value.trim();
+      const theme = document.getElementById('step1-theme').value;
+      const err = document.getElementById('reg-error');
+      if (!firstName) { err.innerText="Укажите имя!"; err.classList.remove('hidden'); return; }
+      if (!usernameInput) { err.innerText="Придумайте username!"; err.classList.remove('hidden'); return; }
+      if (!checkRegUsername()) return;
+      const bannedUsers = LOCAL_DB.banned_users || [];
+      if (bannedUsers.includes(usernameInput)) { err.innerText="Этот @username забанен!"; err.classList.remove('hidden'); return; }
+      const userObj = {
+        phone: authState.phone, first_name: firstName, last_name: lastName,
+        username: usernameInput, extra_usernames: [], bio: bio || "Новый пользователь YouGram",
+        avatar: tempRegAvatar, stars: 15, gifts: [], nfts: [], blocked: {}, theme: theme,
+        is_registered: true, is_verified: false, cloud_password: null,
+        is_banned: false, has_scam: false, is_premium: false,
+        hide_birthday: false, birthday: ""
+      };
+      LOCAL_DB.users[authState.phone] = userObj;
+      authState.currentUser = userObj;
+      applyTheme(theme); saveDatabase(); openMessenger();
+    }
+
+    /* =========================================================================
+       MESSENGER
+       ========================================================================= */
+    function openMessenger() {
+      document.getElementById('auth-container').classList.add('hidden');
+      document.getElementById('messenger-container').classList.remove('hidden');
+      updateCurrentUserUI(); renderChats();
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(() => {
+        refreshDatabaseFromStorage();
+        if (authState.currentUser) {
+          const bannedPhones = LOCAL_DB.banned_phones || [];
+          const freshUser = LOCAL_DB.users[authState.currentUser.phone];
+          if (!freshUser || freshUser.is_banned || bannedPhones.includes(authState.currentUser.phone)) {
+            if (pollInterval) clearInterval(pollInterval);
+            alert("🚫 Ваш аккаунт был забанен владельцем проекта YouGram.");
+            authState = { phone:'', currentUser:null, activeChatUser:null, userToBlock:null, pendingPhone:null, pendingCode:null, profileUser:null, giftToSell:null, currentRecipientGift:null, chatToDelete:null, selectedPremium:'yearly', giftPremiumOption:'yearly', createType:'channel', tempCreateAvatar:'', tempEditChannelAvatar:'', activeChannel:null, channelsProfile:null, currentNftDetail:null, reactionPickerMsg:null, reactionPickerAnchor:null };
+            sessionStorage.removeItem('yougram_current_phone');
+            document.getElementById('messenger-container').classList.add('hidden');
+            document.getElementById('auth-container').classList.remove('hidden');
+            document.getElementById('phone-input').value='';
+            goToStep('step-phone'); return;
+          }
+          authState.currentUser = freshUser;
+        }
+        if (authState.activeChatUser) {
+          authState.activeChatUser = LOCAL_DB.users[authState.activeChatUser.phone] || authState.activeChatUser;
+          renderMessages();
+        }
+        renderChats();
+      }, 1000);
+    }
+
+    function logout() {
+      if (pollInterval) clearInterval(pollInterval);
+      authState = { phone:'', currentUser:null, activeChatUser:null, userToBlock:null, pendingPhone:null, pendingCode:null, profileUser:null, giftToSell:null, currentRecipientGift:null, chatToDelete:null, selectedPremium:'yearly', giftPremiumOption:'yearly', createType:'channel', tempCreateAvatar:'', tempEditChannelAvatar:'', activeChannel:null, channelsProfile:null, currentNftDetail:null, reactionPickerMsg:null, reactionPickerAnchor:null };
+      sessionStorage.removeItem('yougram_current_phone');
+      document.getElementById('messenger-container').classList.add('hidden');
+      document.getElementById('auth-container').classList.remove('hidden');
+      document.getElementById('phone-input').value='';
+      goToStep('step-phone');
+    }
+
+    function buildNameHtml(user) {
+      const verifiedIcon = user.is_verified ? ' <i class="fa-solid fa-circle-check text-tgBlue text-xs"></i>' : '';
+      const scamBadge = user.has_scam ? ' <span class="scam-badge">SCAM</span>' : '';
+      const premiumStar = user.is_premium ? ` <i class="fa-solid fa-star premium-star" onclick="event.stopPropagation(); showPremiumInfo('${user.phone}')"></i>` : '';
+      return `${user.first_name} ${user.last_name || ''}${verifiedIcon}${scamBadge}${premiumStar}`;
+    }
+
+    function updateCurrentUserUI() {
+      const user = authState.currentUser;
+      document.getElementById('user-display-name').innerHTML = buildNameHtml(user);
+      document.getElementById('user-display-username').innerText = `@${user.username}`;
+      const avatarEl = document.getElementById('user-avatar');
+      if (user.avatar) { avatarEl.style.backgroundImage = `url('${user.avatar}')`; avatarEl.innerText=''; }
+      else { avatarEl.style.backgroundImage=''; avatarEl.innerText = user.first_name.charAt(0).toUpperCase(); }
+    }
+
+    function renderChats() {
+      const chatsList = document.getElementById('chats-list');
+      if (!authState.currentUser) return;
+      let allUsers = Object.values(LOCAL_DB.users).filter(u => u.phone !== authState.currentUser.phone);
+      if (isOwner()) {
+        const adminBot = LOCAL_DB.users["AdminPanel"] || DEFAULT_USERS["AdminPanel"];
+        allUsers = allUsers.filter(u => u.phone !== "AdminPanel");
+        allUsers.unshift(adminBot);
+      } else allUsers = allUsers.filter(u => u.phone !== "AdminPanel");
+      const allChannels = Object.values(LOCAL_DB.channels);
+      chatsList.innerHTML = '';
+      allUsers.forEach(u => chatsList.appendChild(createChatUserCard(u)));
+      allChannels.forEach(c => chatsList.appendChild(createChannelCard(c)));
+    }
+
+    function createChannelCard(channel) {
+      const div = document.createElement('div');
+      const isActive = authState.activeChannel && authState.activeChannel.id === channel.id;
+      div.className = `p-3 dark:hover:bg-tgHover hover:bg-gray-100 cursor-pointer flex items-center space-x-3 transition duration-150 ${isActive ? 'dark:bg-tgHover bg-gray-100' : ''}`;
+      div.onclick = () => selectChannel(channel);
+      let avatarContent = '';
+      if (channel.avatar) avatarContent = `<div class="w-12 h-12 rounded-full bg-cover bg-center flex-shrink-0" style="background-image: url('${channel.avatar}')"></div>`;
+      else {
+        const icon = channel.type === 'channel' ? 'fa-bullhorn' : 'fa-users';
+        const bg = channel.type === 'channel' ? 'bg-tgBlue' : 'bg-emerald-500';
+        avatarContent = `<div class="w-12 h-12 rounded-full ${bg} flex items-center justify-center font-bold text-white text-lg flex-shrink-0"><i class="fa-solid ${icon}"></i></div>`;
+      }
+      const badge = channel.type === 'channel' ? `<span class="channel-badge">КАНАЛ</span>` : `<span class="group-badge">ГРУППА</span>`;
+      const subsCount = (channel.subscribers || []).length;
+      div.innerHTML = `
+        ${avatarContent}
+        <div class="flex-1 min-w-0">
+          <h4 class="font-bold text-sm truncate dark:text-white text-gray-900 flex items-center gap-1">${channel.title} ${badge}</h4>
+          <p class="text-xs text-tgBlue truncate">@${channel.username} • ${subsCount} подписчиков</p>
+        </div>
+      `;
+      return div;
+    }
+
+    function createChatUserCard(user) {
+      const div = document.createElement('div');
+      const isActive = authState.activeChatUser && authState.activeChatUser.phone === user.phone;
+      const isBanned = user.is_banned === true;
+      div.className = `p-3 dark:hover:bg-tgHover hover:bg-gray-100 cursor-pointer flex items-center space-x-3 transition duration-150 ${isActive ? 'dark:bg-tgHover bg-gray-100' : ''}`;
+      div.onclick = () => selectChat(user);
+      let avatarContent = '';
+      if (user.phone === "AdminPanel") avatarContent = `<div class="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center font-bold text-white text-lg flex-shrink-0"><i class="fa-solid fa-robot"></i></div>`;
+      else if (isBanned) avatarContent = `<div class="w-12 h-12 rounded-full bg-gray-500 flex items-center justify-center font-bold text-white text-lg flex-shrink-0 ghost-avatar"><i class="fa-solid fa-ghost"></i></div>`;
+      else if (user.avatar) avatarContent = `<div class="w-12 h-12 rounded-full bg-cover bg-center flex-shrink-0" style="background-image: url('${user.avatar}')"></div>`;
+      else avatarContent = `<div class="w-12 h-12 rounded-full bg-tgBlue flex items-center justify-center font-bold text-white text-lg flex-shrink-0">${user.first_name.charAt(0).toUpperCase()}</div>`;
+      const bannedLabel = isBanned ? ' <span class="text-red-400 text-[10px]">(забанен)</span>' : '';
+      div.innerHTML = `
+        ${avatarContent}
+        <div class="flex-1 min-w-0">
+          <h4 class="font-bold text-sm truncate dark:text-white text-gray-900 flex items-center gap-1 ${isBanned ? 'opacity-60 line-through' : ''}">${buildNameHtml(user)}${bannedLabel}</h4>
+          <p class="text-xs text-tgBlue truncate ${isBanned ? 'opacity-60' : ''}">@${user.username}</p>
+        </div>
+      `;
+      return div;
+    }
+
+    function handleSearch(query) {
+      const q = query.trim().toLowerCase();
+      const chatsList = document.getElementById('chats-list');
+      const searchHeader = document.getElementById('search-header-label');
+      if (!q) { searchHeader.classList.add('hidden'); renderChats(); return; }
+      searchHeader.classList.remove('hidden');
+      chatsList.innerHTML = '';
+      let count = 0;
+      Object.values(LOCAL_DB.users).forEach(u => {
+        if (u.phone !== authState.currentUser.phone) {
+          const fullName = `${u.first_name} ${u.last_name || ''}`.toLowerCase();
+          const extras = (u.extra_usernames || []).join(' ').toLowerCase();
+          if (fullName.includes(q) || u.username.toLowerCase().includes(q) || u.phone.includes(q) || extras.includes(q)) {
+            chatsList.appendChild(createChatUserCard(u)); count++;
+          }
+        }
+      });
+      Object.values(LOCAL_DB.channels).forEach(c => {
+        if (c.title.toLowerCase().includes(q) || c.username.toLowerCase().includes(q)) {
+          chatsList.appendChild(createChannelCard(c)); count++;
+        }
+      });
+      if (count === 0) chatsList.innerHTML = `<div class="p-6 text-center text-xs text-tgSecondary">Ничего не найдено</div>`;
+    }
+
+    /* =========================================================================
+       CHANNELS & GROUPS
+       ========================================================================= */
+    function openCreateChatModal() { document.getElementById('create-chat-modal').classList.remove('hidden'); authState.createType = 'channel'; updateCreateTypeUI(); }
+    function closeCreateChatModal() { document.getElementById('create-chat-modal').classList.add('hidden'); }
+    function selectCreateType(type) { authState.createType = type; updateCreateTypeUI(); }
+    function updateCreateTypeUI() {
+      const chBtn = document.getElementById('create-type-channel');
+      const grBtn = document.getElementById('create-type-group');
+      if (authState.createType === 'channel') {
+        chBtn.classList.add('border-tgBlue','bg-tgBlue/10');
+        chBtn.classList.remove('border-gray-300','dark:border-gray-700','bg-gray-100','dark:bg-tgInput');
+        grBtn.classList.remove('border-tgBlue','bg-tgBlue/10');
+        grBtn.classList.add('border-gray-300','dark:border-gray-700','bg-gray-100','dark:bg-tgInput');
+      } else {
+        grBtn.classList.add('border-tgBlue','bg-tgBlue/10');
+        grBtn.classList.remove('border-gray-300','dark:border-gray-700','bg-gray-100','dark:bg-tgInput');
+        chBtn.classList.remove('border-tgBlue','bg-tgBlue/10');
+        chBtn.classList.add('border-gray-300','dark:border-gray-700','bg-gray-100','dark:bg-tgInput');
+      }
+    }
+    function openCreateChatDetails() {
+      closeCreateChatModal();
+      authState.tempCreateAvatar = '';
+      document.getElementById('create-avatar-preview').style.backgroundImage = '';
+      document.getElementById('create-avatar-preview').innerHTML = `<i class="fa-solid ${authState.createType==='channel'?'fa-bullhorn':'fa-users'}"></i>`;
+      document.getElementById('create-title').value = '';
+      document.getElementById('create-username').value = '';
+      document.getElementById('create-bio').value = '';
+      document.getElementById('create-username-error').classList.add('hidden');
+      document.getElementById('create-error').classList.add('hidden');
+      document.getElementById('create-details-title').innerText = authState.createType === 'channel' ? 'Новый канал' : 'Новая группа';
+      document.getElementById('create-chat-details-modal').classList.remove('hidden');
+    }
+    function closeCreateChatDetailsModal() { document.getElementById('create-chat-details-modal').classList.add('hidden'); }
+    function handleCreateAvatarUpload(e) {
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        authState.tempCreateAvatar = ev.target.result;
+        const prev = document.getElementById('create-avatar-preview');
+        prev.style.backgroundImage = `url('${ev.target.result}')`;
+        prev.innerHTML = '';
+      };
+      reader.readAsDataURL(file);
+    }
+    function checkCreateUsername() {
+      const u = document.getElementById('create-username').value.trim().toLowerCase().replace('@','');
+      const err = document.getElementById('create-username-error');
+      if (!u) { err.classList.add('hidden'); return true; }
+      if (isUsernameTaken(u)) { err.innerText = "Этот username уже занят!"; err.classList.remove('hidden'); return false; }
+      err.classList.add('hidden'); return true;
+    }
+    function createChannelOrGroup() {
+      refreshDatabaseFromStorage();
+      const title = document.getElementById('create-title').value.trim();
+      const username = document.getElementById('create-username').value.trim().toLowerCase().replace('@','');
+      const bio = document.getElementById('create-bio').value.trim();
+      const err = document.getElementById('create-error');
+      if (!title) { err.innerText = "Введите название!"; err.classList.remove('hidden'); return; }
+      if (!username) { err.innerText = "Введите @username!"; err.classList.remove('hidden'); return; }
+      if (isUsernameTaken(username)) { err.innerText = "Этот username занят!"; err.classList.remove('hidden'); return; }
+      const channelId = 'channel_' + Date.now();
+      const channel = {
+        id: channelId, type: authState.createType, title: title, username: username,
+        bio: bio, avatar: authState.tempCreateAvatar,
+        ownerPhone: authState.currentUser.phone,
+        subscribers: [authState.currentUser.phone],
+        createdAt: new Date().toISOString()
+      };
+      LOCAL_DB.channels[channelId] = channel;
+      saveDatabase();
+      closeCreateChatDetailsModal();
+      renderChats();
+      alert(`✅ ${authState.createType === 'channel' ? 'Канал' : 'Группа'} «${title}» создан!`);
+    }
+
+    function selectChannel(channel) {
+      authState.activeChannel = channel;
+      authState.activeChatUser = null;
+      openChannelChat(channel);
+      renderChats();
+    }
+    function openChannelChat(channel) {
+      const avatarEl = document.getElementById('active-chat-avatar');
+      if (channel.avatar) { avatarEl.style.backgroundImage = `url('${channel.avatar}')`; avatarEl.innerText=''; }
+      else {
+        avatarEl.style.backgroundImage = '';
+        avatarEl.innerHTML = `<i class="fa-solid ${channel.type==='channel'?'fa-bullhorn':'fa-users'} text-lg"></i>`;
+      }
+      document.getElementById('active-chat-title').innerText = channel.title;
+      document.getElementById('active-chat-subtitle').innerText = `@${channel.username} • ${(channel.subscribers||[]).length} подписчиков`;
+      document.getElementById('empty-chat-state').classList.add('hidden');
+      document.getElementById('chat-input-area').classList.remove('hidden');
+      document.getElementById('delete-chat-btn').classList.remove('hidden');
+      renderMessages();
+    }
+
+    function openChannelProfile(channel) {
+      authState.channelsProfile = channel;
+      document.getElementById('cp-avatar').style.backgroundImage = channel.avatar ? `url('${channel.avatar}')` : '';
+      document.getElementById('cp-avatar').innerHTML = channel.avatar ? '' : `<i class="fa-solid ${channel.type==='channel'?'fa-bullhorn':'fa-users'} text-3xl"></i>`;
+      document.getElementById('cp-name').innerText = channel.title;
+      document.getElementById('cp-username').innerText = '@' + channel.username;
+      document.getElementById('cp-type').innerText = channel.type === 'channel' ? '📢 Канал' : '👥 Группа';
+      document.getElementById('cp-bio').innerText = channel.bio || 'Описание отсутствует';
+      document.getElementById('cp-subs-count').innerText = (channel.subscribers||[]).length;
+      document.getElementById('cp-subs-label').innerText = getSubWord((channel.subscribers||[]).length);
+      const isSubscribed = (channel.subscribers||[]).includes(authState.currentUser.phone);
+      document.getElementById('cp-subscribe-text').innerText = isSubscribed ? 'Отписаться' : 'Подписаться';
+      const isOwner = channel.ownerPhone === authState.currentUser.phone;
+      document.getElementById('cp-owner-controls').classList.toggle('hidden', !isOwner);
+      document.getElementById('channel-profile-modal').classList.remove('hidden');
+    }
+    function closeChannelProfileModal() { document.getElementById('channel-profile-modal').classList.add('hidden'); }
+    function getSubWord(n) {
+      if (n % 10 === 1 && n % 100 !== 11) return 'подписчик';
+      if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return 'подписчика';
+      return 'подписчиков';
+    }
+    function toggleSubscribeChannel() {
+      refreshDatabaseFromStorage();
+      const channel = LOCAL_DB.channels[authState.channelsProfile.id];
+      if (!channel) return;
+      const myPhone = authState.currentUser.phone;
+      const idx = channel.subscribers.indexOf(myPhone);
+      if (idx === -1) channel.subscribers.push(myPhone);
+      else channel.subscribers.splice(idx, 1);
+      LOCAL_DB.channels[channel.id] = channel;
+      authState.channelsProfile = channel;
+      authState.activeChannel = channel;
+      saveDatabase();
+      openChannelProfile(channel);
+      renderChats();
+      if (authState.activeChannel && authState.activeChannel.id === channel.id) {
+        document.getElementById('active-chat-subtitle').innerText = `@${channel.username} • ${(channel.subscribers||[]).length} подписчиков`;
+      }
+    }
+    function openChannelChatFromProfile() { closeChannelProfileModal(); openChannelChat(authState.channelsProfile); }
+    function openEditChannelModal() {
+      const ch = authState.channelsProfile;
+      if (!ch) return;
+      authState.tempEditChannelAvatar = ch.avatar || '';
+      document.getElementById('edit-channel-avatar-preview').style.backgroundImage = ch.avatar ? `url('${ch.avatar}')` : '';
+      document.getElementById('edit-channel-avatar-preview').innerHTML = ch.avatar ? '' : `<i class="fa-solid ${ch.type==='channel'?'fa-bullhorn':'fa-users'}"></i>`;
+      document.getElementById('edit-channel-title').value = ch.title;
+      document.getElementById('edit-channel-username').value = ch.username;
+      document.getElementById('edit-channel-bio').value = ch.bio || '';
+      document.getElementById('edit-channel-username-error').classList.add('hidden');
+      document.getElementById('edit-channel-error').classList.add('hidden');
+      document.getElementById('edit-channel-modal').classList.remove('hidden');
+    }
+    function closeEditChannelModal() { document.getElementById('edit-channel-modal').classList.add('hidden'); }
+    function handleEditChannelAvatarUpload(e) {
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        authState.tempEditChannelAvatar = ev.target.result;
+        document.getElementById('edit-channel-avatar-preview').style.backgroundImage = `url('${ev.target.result}')`;
+        document.getElementById('edit-channel-avatar-preview').innerHTML = '';
+      };
+      reader.readAsDataURL(file);
+    }
+    function saveChannelChanges() {
+      refreshDatabaseFromStorage();
+      const ch = LOCAL_DB.channels[authState.channelsProfile.id];
+      if (!ch) return;
+      const title = document.getElementById('edit-channel-title').value.trim();
+      const username = document.getElementById('edit-channel-username').value.trim().toLowerCase().replace('@','');
+      const bio = document.getElementById('edit-channel-bio').value.trim();
+      const err = document.getElementById('edit-channel-error');
+      if (!title) { err.innerText = "Введите название!"; err.classList.remove('hidden'); return; }
+      if (!username) { err.innerText = "Введите username!"; err.classList.remove('hidden'); return; }
+      if (username !== ch.username && isUsernameTaken(username)) { err.innerText = "Этот username занят!"; err.classList.remove('hidden'); return; }
+      ch.title = title; ch.username = username; ch.bio = bio; ch.avatar = authState.tempEditChannelAvatar;
+      LOCAL_DB.channels[ch.id] = ch;
+      authState.channelsProfile = ch; authState.activeChannel = ch;
+      saveDatabase(); closeEditChannelModal(); openChannelProfile(ch); renderChats();
+      if (authState.activeChannel && authState.activeChannel.id === ch.id) {
+        document.getElementById('active-chat-title').innerText = ch.title;
+        document.getElementById('active-chat-subtitle').innerText = `@${ch.username} • ${(ch.subscribers||[]).length} подписчиков`;
+      }
+      alert('✅ Изменения сохранены!');
+    }
+    function openChannelSubscribers() {
+      const ch = authState.channelsProfile;
+      if (!ch) return;
+      const list = document.getElementById('channel-subscribers-list');
+      const subs = ch.subscribers || [];
+      if (subs.length === 0) list.innerHTML = `<p class="text-xs text-tgSecondary text-center py-8">Подписчиков нет</p>`;
+      else {
+        list.innerHTML = subs.map(phone => {
+          const u = LOCAL_DB.users[phone];
+          if (!u) return '';
+          const avatarContent = u.avatar
+            ? `<div class="w-10 h-10 rounded-full bg-cover bg-center flex-shrink-0" style="background-image: url('${u.avatar}')"></div>`
+            : `<div class="w-10 h-10 rounded-full bg-tgBlue flex items-center justify-center font-bold text-white flex-shrink-0">${u.first_name.charAt(0).toUpperCase()}</div>`;
+          const removeBtn = u.phone !== ch.ownerPhone
+            ? `<button onclick="removeSubscriber('${u.phone}')" class="text-red-500 text-xs px-2 py-1 rounded hover:bg-red-500/10">Удалить</button>`
+            : `<span class="text-tgSecondary text-xs">владелец</span>`;
+          return `
+            <div class="flex items-center space-x-3 p-2 dark:hover:bg-tgHover hover:bg-gray-100 rounded-xl">
+              ${avatarContent}
+              <div class="flex-1 min-w-0">
+                <p class="font-bold text-sm dark:text-white text-gray-900 truncate">${u.first_name} ${u.last_name || ''}</p>
+                <p class="text-xs text-tgBlue truncate">@${u.username}</p>
+              </div>
+              ${removeBtn}
+            </div>
+          `;
+        }).join('');
+      }
+      document.getElementById('channel-subscribers-modal').classList.remove('hidden');
+    }
+    function closeChannelSubscribersModal() { document.getElementById('channel-subscribers-modal').classList.add('hidden'); }
+    function removeSubscriber(phone) {
+      refreshDatabaseFromStorage();
+      const ch = LOCAL_DB.channels[authState.channelsProfile.id];
+      if (!ch) return;
+      ch.subscribers = ch.subscribers.filter(p => p !== phone);
+      LOCAL_DB.channels[ch.id] = ch;
+      authState.channelsProfile = ch; authState.activeChannel = ch;
+      saveDatabase(); openChannelSubscribers(); renderChats();
+    }
+
+    function selectChat(targetUser) {
+      authState.activeChatUser = targetUser;
+      authState.activeChannel = null;
+      const isBanned = targetUser.is_banned === true;
+      document.getElementById('active-chat-title').innerHTML = `${buildNameHtml(targetUser)}${isBanned ? ' <span class="text-red-400 text-xs">(забанен)</span>' : ''}`;
+      document.getElementById('active-chat-subtitle').innerText = targetUser.bio ? `@${targetUser.username} • ${targetUser.bio}` : `@${targetUser.username}`;
+      const avatarEl = document.getElementById('active-chat-avatar');
+      if (isBanned) {
+        avatarEl.style.backgroundImage = '';
+        avatarEl.innerHTML = `<i class="fa-solid fa-ghost text-lg text-gray-400"></i>`;
+        avatarEl.className = "w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center font-bold text-white overflow-hidden bg-cover bg-center ghost-avatar";
+      } else if (targetUser.avatar) {
+        avatarEl.style.backgroundImage = `url('${targetUser.avatar}')`;
+        avatarEl.innerText = '';
+      } else {
+        avatarEl.style.backgroundImage = '';
+        avatarEl.innerText = targetUser.first_name.charAt(0).toUpperCase();
+      }
+      document.getElementById('empty-chat-state').classList.add('hidden');
+      document.getElementById('chat-input-area').classList.remove('hidden');
+      document.getElementById('delete-chat-btn').classList.remove('hidden');
+      renderChats();
+      renderMessages();
+    }
+
+    /* =========================================================================
+       RENDER MESSAGES с реакциями
+       ========================================================================= */
+    let lastRenderedCount = 0;
+    function renderMessages() {
+      const container = document.getElementById('messages-container');
+      if ((!authState.activeChatUser && !authState.activeChannel) || !authState.currentUser) return;
+      let chatKey;
+      if (authState.activeChannel) chatKey = 'channel_' + authState.activeChannel.id;
+      else chatKey = getChatKey(authState.currentUser.phone, authState.activeChatUser.phone);
+      const msgs = LOCAL_DB.messages[chatKey] || [];
+      if (msgs.length === lastRenderedCount && container.children.length > 1) return;
+      lastRenderedCount = msgs.length;
+      container.innerHTML = '';
+
+      if (msgs.length === 0) {
+        const welcomeDiv = document.createElement('div');
+        welcomeDiv.className = "m-auto text-center text-tgSecondary text-xs dark:bg-tgCard/60 bg-white px-4 py-2 rounded-xl border dark:border-gray-800 border-gray-200 shadow-sm";
+        welcomeDiv.innerText = `Начало истории диалога`;
+        container.appendChild(welcomeDiv);
+        return;
+      }
+
+      msgs.forEach((m, idx) => {
+        const isMe = m.sender === authState.currentUser.phone;
+        const msgWrapper = document.createElement('div');
+        msgWrapper.className = isMe ? "self-end flex items-end gap-2 max-w-md" : "self-start flex items-end gap-2 max-w-md";
+
+        const senderUser = LOCAL_DB.users[m.sender] || authState.currentUser;
+        const avatarSmall = senderUser.avatar
+          ? `<div class="w-7 h-7 rounded-full bg-cover bg-center flex-shrink-0" style="background-image: url('${senderUser.avatar}')"></div>`
+          : `<div class="w-7 h-7 rounded-full bg-tgBlue flex items-center justify-center text-xs font-bold text-white flex-shrink-0">${senderUser.first_name.charAt(0).toUpperCase()}</div>`;
+
+        const bubbleClass = isMe
+          ? "bg-tgBlue text-white text-sm py-2 px-3.5 rounded-2xl rounded-tr-none shadow-sm relative"
+          : "dark:bg-tgCard bg-white dark:text-white text-gray-900 text-sm py-2 px-3.5 rounded-2xl rounded-tl-none shadow-sm border dark:border-gray-800 border-gray-200 relative";
+
+        // Реакции
+        const reactions = m.reactions || {};
+        const reactionsHtml = Object.keys(reactions).length > 0
+          ? `<div class="flex flex-wrap gap-1 mt-1">${Object.entries(reactions).map(([emoji, users]) => 
+              `<span class="reaction-pill ${users.includes(authState.currentUser.phone) ? 'active' : ''}" onclick="toggleReaction(${idx}, '${emoji}')">${emoji} ${users.length}</span>`
+            ).join('')}</div>`
+          : '';
+
+        const reactionTrigger = `<button class="absolute -top-2 ${isMe ? 'left-0' : 'right-0'} bg-[#17212b] border border-gray-700 rounded-full w-5 h-5 flex items-center justify-center text-[10px] text-tgSecondary hover:text-white opacity-0 group-hover:opacity-100 transition" onclick="event.stopPropagation(); openReactionPicker(event, ${idx})">+</button>`;
+
+        msgWrapper.className += ' group relative';
+        msgWrapper.innerHTML = isMe
+          ? `<div class="${bubbleClass}">${m.text}${reactionTrigger}</div>${reactionsHtml ? `<div>${reactionsHtml}</div>` : ''}${avatarSmall}`
+          : `${avatarSmall}<div>${m.text ? `<div class="${bubbleClass}">${m.text}${reactionTrigger}</div>` : ''}${reactionsHtml || ''}</div>`;
+        
+        // Добавляем двойной клик для открытия реакций
+        msgWrapper.addEventListener('dblclick', (e) => { e.preventDefault(); openReactionPicker(e, idx); });
+
+        container.appendChild(msgWrapper);
+      });
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    /* =========================================================================
+       REACTIONS
+       ========================================================================= */
+    const REACTION_EMOJIS = ['👌', '❤️', '😂', '👍', '🔥', '🤔', '😢'];
+
+    function openReactionPicker(event, msgIndex) {
+      event.stopPropagation();
+      closeReactionPicker();
+      
+      let chatKey;
+      if (authState.activeChannel) chatKey = 'channel_' + authState.activeChannel.id;
+      else chatKey = getChatKey(authState.currentUser.phone, authState.activeChatUser.phone);
+      const msgs = LOCAL_DB.messages[chatKey] || [];
+      const msg = msgs[msgIndex];
+      if (!msg) return;
+
+      const picker = document.createElement('div');
+      picker.className = 'reaction-picker';
+      picker.id = 'reaction-picker-active';
+      
+      // Позиционирование
+      const rect = event.target.getBoundingClientRect();
+      picker.style.position = 'fixed';
+      picker.style.top = (rect.top - 50) + 'px';
+      picker.style.left = Math.max(10, rect.left - 40) + 'px';
+
+      picker.innerHTML = REACTION_EMOJIS.map(emoji => 
+        `<span onclick="toggleReaction(${msgIndex}, '${emoji}'); closeReactionPicker();">${emoji}</span>`
+      ).join('');
+      
+      document.body.appendChild(picker);
+      authState.reactionPickerMsg = msgIndex;
+      authState.reactionPickerAnchor = picker;
+
+      setTimeout(() => {
+        document.addEventListener('click', closeReactionPickerOutside);
+      }, 10);
+    }
+
+    function closeReactionPickerOutside(e) {
+      if (authState.reactionPickerAnchor && !authState.reactionPickerAnchor.contains(e.target)) {
+        closeReactionPicker();
+      }
+    }
+
+    function closeReactionPicker() {
+      if (authState.reactionPickerAnchor) {
+        authState.reactionPickerAnchor.remove();
+        authState.reactionPickerAnchor = null;
+      }
+      document.removeEventListener('click', closeReactionPickerOutside);
+      authState.reactionPickerMsg = null;
+    }
+
+    function toggleReaction(msgIndex, emoji) {
+      refreshDatabaseFromStorage();
+      let chatKey;
+      if (authState.activeChannel) chatKey = 'channel_' + authState.activeChannel.id;
+      else chatKey = getChatKey(authState.currentUser.phone, authState.activeChatUser.phone);
+      const msgs = LOCAL_DB.messages[chatKey] || [];
+      const msg = msgs[msgIndex];
+      if (!msg) return;
+
+      if (!msg.reactions) msg.reactions = {};
+      if (!msg.reactions[emoji]) msg.reactions[emoji] = [];
+
+      const myPhone = authState.currentUser.phone;
+      const idx = msg.reactions[emoji].indexOf(myPhone);
+      if (idx === -1) msg.reactions[emoji].push(myPhone);
+      else {
+        msg.reactions[emoji].splice(idx, 1);
+        if (msg.reactions[emoji].length === 0) delete msg.reactions[emoji];
+      }
+
+      LOCAL_DB.messages[chatKey] = msgs;
+      saveDatabase();
+      lastRenderedCount = 0; // Force re-render
+      renderMessages();
+    }
+
+    /* =========================================================================
+       SEND MESSAGE
+       ========================================================================= */
+    function getChatKey(p1, p2) { return [p1, p2].sort().join('_'); }
+    function sendMessage() {
+      refreshDatabaseFromStorage();
+      const input = document.getElementById('message-text-input');
+      const text = input.value.trim();
+      if (!text) return;
+      const myPhone = authState.currentUser.phone;
+      let chatKey;
+      if (authState.activeChannel) {
+        const ch = LOCAL_DB.channels[authState.activeChannel.id];
+        if (!ch) return;
+        if (ch.type === 'channel' && ch.ownerPhone !== myPhone) { alert("Только владелец канала может публиковать."); input.value=''; return; }
+        if (ch.type === 'group' && !(ch.subscribers||[]).includes(myPhone)) { alert("Подпишитесь, чтобы писать."); input.value=''; return; }
+        chatKey = 'channel_' + ch.id;
+      } else if (authState.activeChatUser) {
+        if (authState.activeChatUser.is_banned) { alert("Пользователь забанен."); input.value=''; return; }
+        chatKey = getChatKey(myPhone, authState.activeChatUser.phone);
+      } else return;
+
+      if (!LOCAL_DB.messages[chatKey]) LOCAL_DB.messages[chatKey] = [];
+      LOCAL_DB.messages[chatKey].push({ sender: myPhone, text: text, timestamp: new Date().toISOString(), reactions: {} });
+      saveDatabase();
+      input.value = '';
+      lastRenderedCount = 0;
+      renderMessages();
+
+      // === БОТ ADMINPANEL ===
+      if (authState.activeChatUser && authState.activeChatUser.phone === "AdminPanel" && isOwner()) {
+        setTimeout(() => {
+          refreshDatabaseFromStorage();
+          let botReply = "";
+          const lowerText = text.toLowerCase();
+
+          if (lowerText === '/vipe') botReply = "⚠️ Очистить базу? Напишите '/vipe yes'.";
+          else if (lowerText === '/vipe yes') {
+            const ownerPhone = authState.currentUser.phone;
+            const ownerUser = JSON.parse(JSON.stringify(LOCAL_DB.users[ownerPhone]));
+            LOCAL_DB.users = { "+000 000": JSON.parse(JSON.stringify(DEFAULT_USERS["+000 000"])), "AdminPanel": JSON.parse(JSON.stringify(DEFAULT_USERS["AdminPanel"])) };
+            LOCAL_DB.messages = {}; LOCAL_DB.channels = {}; LOCAL_DB.nfts = {};
+            LOCAL_DB.banned_users = []; LOCAL_DB.banned_phones = [];
+            LOCAL_DB.users[ownerPhone] = ownerUser; LOCAL_DB.users[ownerPhone].stars = 999999;
+            saveDatabase(); botReply = "✅ База очищена!";
+            setTimeout(() => location.reload(), 1500);
+          }
+          else if (lowerText.startsWith('/vzlome ')) {
+            const t = text.split(' ')[1]?.replace('@','').toLowerCase();
+            if (!t) botReply = "❌ Укажите username.";
+            else {
+              const u = Object.values(LOCAL_DB.users).find(x => x.username.toLowerCase()===t || (x.extra_usernames||[]).some(y=>y.toLowerCase()===t));
+              if (u) {
+                let code = "1488";
+                if (u.phone === "+888 000 0000") code = "6767";
+                else if (u.phone === "+7 777 777 77 77") code = "1337";
+                else if (u.phone === "+999 999") code = "1111";
+                else if (u.phone === "+000 000") code = "2222";
+                botReply = `💀 ВЗЛОМ @${t}:\n📱 Номер: ${u.phone}\n🔑 Код: ${code}\n🔒 Облачный: ${u.cloud_password || 'отсутствует'}`;
+              } else botReply = `❌ Не найден.`;
+            }
+          }
+          else if (lowerText.startsWith('/osint ')) {
+            const t = text.split(' ')[1]?.replace('@','').toLowerCase();
+            if (!t) botReply = "❌ Укажите username.";
+            else {
+              const u = Object.values(LOCAL_DB.users).find(x => x.username.toLowerCase()===t || (x.extra_usernames||[]).some(y=>y.toLowerCase()===t));
+              if (u) botReply = `🔎 OSINT @${t}:\n📱 ${u.phone}\n👤 ${u.first_name} ${u.last_name || ''}`;
+              else botReply = `❌ Не найден.`;
+            }
+          }
+          else if (lowerText.startsWith('/give_premium ')) {
+            const t = text.split(' ')[1]?.replace('@','').toLowerCase();
+            if (!t) botReply = "❌ Укажите username.";
+            else {
+              const u = Object.values(LOCAL_DB.users).find(x => x.username.toLowerCase()===t || (x.extra_usernames||[]).some(y=>y.toLowerCase()===t));
+              if (u) { u.is_premium = true; LOCAL_DB.users[u.phone]=u; saveDatabase(); botReply = `✅ @${t} выдан Premium!`; }
+              else botReply = `❌ Не найден.`;
+            }
+          }
+          else if (lowerText.startsWith('/ungive_premium ')) {
+            const t = text.split(' ')[1]?.replace('@','').toLowerCase();
+            if (!t) botReply = "❌ Укажите username.";
+            else {
+              const u = Object.values(LOCAL_DB.users).find(x => x.username.toLowerCase()===t || (x.extra_usernames||[]).some(y=>y.toLowerCase()===t));
+              if (u) { u.is_premium = false; LOCAL_DB.users[u.phone]=u; saveDatabase(); botReply = `✅ @${t} снят Premium.`; }
+              else botReply = `❌ Не найден.`;
+            }
+          }
+          else if (lowerText.startsWith('/give star ')) {
+            const p = text.split(' ');
+            if (p.length >= 4) {
+              const amt = parseInt(p[2]); const t = p[3].replace('@','').toLowerCase();
+              if (isNaN(amt) || amt <= 0) botReply = "❌ Неверная сумма.";
+              else {
+                const u = Object.values(LOCAL_DB.users).find(x => x.username.toLowerCase()===t);
+                if (u) { if (!u.stars) u.stars = 0; u.stars += amt; LOCAL_DB.users[u.phone]=u; saveDatabase(); botReply = `✅ @${t} выдано ${amt} ⭐!`; }
+                else botReply = `❌ Не найден.`;
+              }
+            } else botReply = "❌ Формат: /give star 100 @username";
+          }
+          else if (lowerText.startsWith('/verefication give ')) {
+            const t = text.split(' ')[2]?.replace('@','').toLowerCase();
+            if (!t) botReply = "❌ Укажите username.";
+            else {
+              const u = Object.values(LOCAL_DB.users).find(x => x.username.toLowerCase()===t);
+              if (u) { u.is_verified = true; LOCAL_DB.users[u.phone]=u; saveDatabase(); botReply = `✅ @${t} получил галочку!`; }
+              else botReply = `❌ Не найден.`;
+            }
+          }
+          else if (lowerText.startsWith('/unverefication ')) {
+            const t = text.split(' ')[1]?.replace('@','').toLowerCase();
+            if (!t) botReply = "❌ Укажите username.";
+            else {
+              const u = Object.values(LOCAL_DB.users).find(x => x.username.toLowerCase()===t);
+              if (u) {
+                if (u.is_verified) { u.is_verified = false; LOCAL_DB.users[u.phone]=u; saveDatabase(); botReply = `✅ @${t} снята галочка.`; }
+                else botReply = `⚠️ У @${t} нет галочки.`;
+              } else botReply = `❌ Не найден.`;
+            }
+          }
+          else if (lowerText.startsWith('/give_scam-metka ')) {
+            const t = text.split(' ')[1]?.replace('@','').toLowerCase();
+            if (!t) botReply = "❌ Укажите username.";
+            else {
+              const u = Object.values(LOCAL_DB.users).find(x => x.username.toLowerCase()===t);
+              if (u) { u.has_scam = true; LOCAL_DB.users[u.phone]=u; saveDatabase(); botReply = `✅ @${t} выдана метка SCAM.`; }
+              else botReply = `❌ Не найден.`;
+            }
+          }
+          else if (lowerText.startsWith('/ungive_scam-metka ')) {
+            const t = text.split(' ')[1]?.replace('@','').toLowerCase();
+            if (!t) botReply = "❌ Укажите username.";
+            else {
+              const u = Object.values(LOCAL_DB.users).find(x => x.username.toLowerCase()===t);
+              if (u) {
+                if (u.has_scam) { u.has_scam = false; LOCAL_DB.users[u.phone]=u; saveDatabase(); botReply = `✅ @${t} снята метка SCAM.`; }
+                else botReply = `⚠️ У @${t} нет метки SCAM.`;
+              } else botReply = `❌ Не найден.`;
+            }
+          }
+          else if (lowerText.startsWith('/snos ')) {
+            const t = text.split(' ')[1]?.replace('@','').toLowerCase();
+            if (!t) botReply = "❌ Укажите username.";
+            else {
+              const u = Object.values(LOCAL_DB.users).find(x => x.username.toLowerCase()===t);
+              if (u) {
+                if (!LOCAL_DB.banned_users) LOCAL_DB.banned_users = [];
+                if (!LOCAL_DB.banned_phones) LOCAL_DB.banned_phones = [];
+                if (!LOCAL_DB.banned_users.includes(t)) LOCAL_DB.banned_users.push(t);
+                if (!LOCAL_DB.banned_phones.includes(u.phone)) LOCAL_DB.banned_phones.push(u.phone);
+                u.is_banned = true; u.avatar = ""; u.bio = "Забанен"; u.gifts = []; u.nfts = []; u.stars = 0;
+                u.is_verified = false; u.cloud_password = null; u.has_scam = false; u.is_premium = false;
+                LOCAL_DB.users[u.phone]=u; saveDatabase(); botReply = `✅ @${t} забанен.`;
+              } else botReply = `❌ Не найден.`;
+            }
+          }
+          else if (lowerText.startsWith('/unban ')) {
+            const t = text.split(' ')[1]?.replace('@','').toLowerCase();
+            if (!t) botReply = "❌ Укажите username.";
+            else {
+              const u = Object.values(LOCAL_DB.users).find(x => x.username.toLowerCase()===t);
+              if (u) {
+                if (LOCAL_DB.banned_users) LOCAL_DB.banned_users = LOCAL_DB.banned_users.filter(x => x !== t);
+                if (LOCAL_DB.banned_phones) LOCAL_DB.banned_phones = LOCAL_DB.banned_phones.filter(x => x !== u.phone);
+                u.is_banned = false; LOCAL_DB.users[u.phone]=u; saveDatabase(); botReply = `✅ @${t} разбанен.`;
+              } else botReply = `❌ Не найден.`;
+            }
+          }
+          else if (lowerText === '/help' || lowerText === '/commands') {
+            botReply = "🤖 Команды:\n\n" +
+              "🔹 /help — список команд\n" +
+              "🔹 /vipe — очистить базу\n" +
+              "🔹 /osint @username — номер телефона\n" +
+              "🔹 /vzlome @username — полный взлом\n" +
+              "🔹 /give star (сумма) @username — звёзды\n" +
+              "🔹 /verefication give @username — галочка\n" +
+              "🔹 /unverefication @username — снять галочку\n" +
+              "🔹 /give_premium @username — выдать Premium\n" +
+              "🔹 /ungive_premium @username — снять Premium\n" +
+              "🔹 /give_scam-metka @username — метка SCAM\n" +
+              "🔹 /ungive_scam-metka @username — снять SCAM\n" +
+              "🔹 /snos @username — забанить\n" +
+              "🔹 /unban @username — разбанить";
+          }
+          else botReply = "🤖 Неизвестная команда. Напишите /help.";
+
+          LOCAL_DB.messages[chatKey].push({ sender: "AdminPanel", text: botReply, timestamp: new Date().toISOString(), reactions: {} });
+          saveDatabase();
+          if (authState.activeChatUser && authState.activeChatUser.phone === "AdminPanel") { lastRenderedCount = 0; renderMessages(); }
+        }, 500);
+      }
+    }
+
+    /* =========================================================================
+       NFT
+       ========================================================================= */
+    function sendNftGift() {
+      refreshDatabaseFromStorage();
+      if (!authState.activeChatUser) { alert('Откройте чат с пользователем.'); return; }
+      
+      const availableNft = Object.values(LOCAL_DB.nfts).find(n => n.ownerPhone === null);
+      if (!availableNft) { alert('❌ Все 30 Chill Flame распроданы!'); return; }
+      
+      if (!authState.currentUser.stars) authState.currentUser.stars = 0;
+      if (authState.currentUser.stars < 300) { alert('❌ Недостаточно звёзд! Нужно 300 ⭐.'); return; }
+      
+      authState.currentUser.stars -= 300;
+      availableNft.ownerPhone = authState.activeChatUser.phone;
+      
+      LOCAL_DB.users[authState.currentUser.phone] = authState.currentUser;
+      if (!LOCAL_DB.users[authState.activeChatUser.phone].nfts) LOCAL_DB.users[authState.activeChatUser.phone].nfts = [];
+      LOCAL_DB.users[authState.activeChatUser.phone].nfts.push(availableNft.id);
+      LOCAL_DB.nfts[availableNft.id] = availableNft;
+      
+      // Сообщение-подарок
+      const chatKey = getChatKey(authState.currentUser.phone, authState.activeChatUser.phone);
+      if (!LOCAL_DB.messages[chatKey]) LOCAL_DB.messages[chatKey] = [];
+      LOCAL_DB.messages[chatKey].push({
+        sender: authState.currentUser.phone,
+        recipient: authState.activeChatUser.phone,
+        text: `NFT_GIFT:${availableNft.id}`,
+        isNftGift: true,
+        timestamp: new Date().toISOString(),
+        reactions: {}
+      });
+      
+      saveDatabase();
+      closeGiftModal();
+      lastRenderedCount = 0;
+      renderMessages();
+      alert(`✅ NFT «${availableNft.name}» подарен!`);
+    }
+
+    function openNftDetailModal(nftId) {
+      refreshDatabaseFromStorage();
+      const nft = LOCAL_DB.nfts[nftId];
+      if (!nft) return;
+      authState.currentNftDetail = nft;
+
+      document.getElementById('nft-detail-title').innerText = nft.name;
+      document.getElementById('nft-detail-sale').innerText = nft.ownerPhone === authState.currentUser.phone && nft.forSale
+        ? `В продаже за ⭐ ${nft.salePrice}` 
+        : (nft.forSale ? `В продаже за ⭐ ${nft.salePrice}` : '');
+
+      const owner = nft.ownerPhone ? LOCAL_DB.users[nft.ownerPhone] : null;
+      document.getElementById('nft-detail-owner').innerHTML = owner
+        ? `<span class="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px]">${owner.first_name.charAt(0)}</span> ${owner.first_name} ${owner.last_name || ''}`
+        : 'Нет владельца';
+
+      document.getElementById('nft-detail-modal').classList.remove('hidden');
+
+      const isOwner = nft.ownerPhone === authState.currentUser.phone;
+      document.getElementById('nft-owner-actions').classList.toggle('hidden', !isOwner);
+      document.getElementById('nft-buyer-actions').classList.toggle('hidden', !(nft.forSale && !isOwner));
+    }
+    function closeNftDetailModal() { document.getElementById('nft-detail-modal').classList.add('hidden'); }
+
+    function sellNft() {
+      refreshDatabaseFromStorage();
+      const nft = LOCAL_DB.nfts[authState.currentNftDetail.id];
+      if (!nft) return;
+      if (nft.ownerPhone !== authState.currentUser.phone) { alert('Вы не владелец.'); return; }
+      nft.forSale = true;
+      nft.salePrice = 500;
+      LOCAL_DB.nfts[nft.id] = nft;
+      saveDatabase();
+      closeNftDetailModal();
+      openNftDetailModal(nft.id);
+    }
+
+    function buyNft() {
+      refreshDatabaseFromStorage();
+      const nft = LOCAL_DB.nfts[authState.currentNftDetail.id];
+      if (!nft) return;
+      if (!nft.forSale) { alert('Не продаётся.'); return; }
+      if (!authState.currentUser.stars) authState.currentUser.stars = 0;
+      if (authState.currentUser.stars < nft.salePrice) { alert(`Недостаточно ⭐! Нужно ${nft.salePrice}.`); return; }
+
+      const oldOwner = nft.ownerPhone;
+      authState.currentUser.stars -= nft.salePrice;
+      if (oldOwner) {
+        LOCAL_DB.users[oldOwner].stars = (LOCAL_DB.users[oldOwner].stars || 0) + nft.salePrice;
+        LOCAL_DB.users[oldOwner].nfts = (LOCAL_DB.users[oldOwner].nfts || []).filter(id => id !== nft.id);
+      }
+      nft.ownerPhone = authState.currentUser.phone;
+      nft.forSale = false;
+      if (!LOCAL_DB.users[authState.currentUser.phone].nfts) LOCAL_DB.users[authState.currentUser.phone].nfts = [];
+      LOCAL_DB.users[authState.currentUser.phone].nfts.push(nft.id);
+      LOCAL_DB.users[authState.currentUser.phone] = authState.currentUser;
+      LOCAL_DB.nfts[nft.id] = nft;
+      saveDatabase();
+      closeNftDetailModal();
+      updateCurrentUserUI();
+      alert(`✅ Вы купили «${nft.name}»!`);
+    }
+
+    function openNftGalleryModal() {
+      if (!authState.profileUser) return;
+      const nfts = (authState.profileUser.nfts || []).map(id => LOCAL_DB.nfts[id]).filter(Boolean);
+      const content = document.getElementById('nft-gallery-content');
+      if (nfts.length === 0) {
+        content.innerHTML = `<div class="text-center py-12"><i class="fa-solid fa-image text-5xl text-tgSecondary/50 mb-4"></i><p class="text-tgSecondary text-sm">Нет NFT</p></div>`;
+      } else {
+        content.innerHTML = `<div class="grid grid-cols-2 gap-3">${nfts.map(n => `
+          <div onclick="closeNftGalleryModal(); openNftDetailModal('${n.id}')" class="nft-card p-3 flex flex-col items-center cursor-pointer hover:opacity-90 transition">
+            <img src="${n.image}" class="w-20 h-20 rounded-xl mb-2">
+            <span class="text-xs font-bold text-white text-center">${n.name}</span>
+          </div>
+        `).join('')}</div>`;
+      }
+      document.getElementById('nft-gallery-modal').classList.remove('hidden');
+    }
+    function closeNftGalleryModal() { document.getElementById('nft-gallery-modal').classList.add('hidden'); }
+
+    /* =========================================================================
+       SETTINGS / PROFILE / PREMIUM / GIFTS
+       ========================================================================= */
+    function openSettingsModal() { document.getElementById('settings-modal').classList.remove('hidden'); }
+    function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); }
+    function openMySelfProfile() { closeSettingsModal(); showUserProfile(authState.currentUser); }
+    function openTargetUserProfile() {
+      if (authState.activeChannel) { openChannelProfile(authState.activeChannel); return; }
+      if (!authState.activeChatUser) return;
+      showUserProfile(authState.activeChatUser);
+    }
+    function closeTargetProfileModal() { document.getElementById('target-profile-modal').classList.add('hidden'); }
+    function showUserProfile(u) {
+      authState.profileUser = u; authState.userToBlock = u;
+      const isBanned = u.is_banned === true;
+      const isMe = u.phone === authState.currentUser.phone;
+      document.getElementById('tp-name').innerHTML = `${buildNameHtml(u)}${isBanned ? ' <span class="text-red-400 text-xs">(забанен)</span>' : ''}`;
+      document.getElementById('tp-username').innerText = `@${u.username}`;
+      const giftsCount = u.gifts ? u.gifts.length : 0;
+      document.getElementById('tp-gifts-count').innerText = giftsCount;
+      document.getElementById('tp-gifts-label').innerText = getGiftWord(giftsCount);
+      const extrasEl = document.getElementById('tp-extra-usernames');
+      const extras = u.extra_usernames || [];
+      extrasEl.innerHTML = extras.length > 0 ? extras.map(x => `<span class="extra-username-badge">@${x}</span>`).join('') : '';
+      const bioEl = document.getElementById('tp-bio');
+      const statusEl = document.getElementById('tp-status');
+      if (isBanned) { bioEl.innerText = "Аккаунт забанен"; statusEl.innerText = "был(а) давно"; }
+      else { bioEl.innerText = u.bio || "Нет описания"; statusEl.innerText = "был(а) недавно"; }
+      const tpAv = document.getElementById('tp-avatar');
+      if (isBanned) { tpAv.style.backgroundImage = ''; tpAv.innerHTML = `<i class="fa-solid fa-ghost text-5xl text-gray-400"></i>`; }
+      else if (u.avatar) { tpAv.style.backgroundImage = `url('${u.avatar}')`; tpAv.innerText = ''; }
+      else { tpAv.style.backgroundImage = ''; tpAv.innerText = u.first_name.charAt(0).toUpperCase(); }
+      document.getElementById('add-username-btn').classList.toggle('hidden', !(isMe && extras.length < 10 && !isBanned));
+      document.getElementById('target-profile-modal').classList.remove('hidden');
+    }
+    function getGiftWord(n) {
+      if (n % 10 === 1 && n % 100 !== 11) return 'подарок';
+      if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return 'подарка';
+      return 'подарков';
+    }
+
+    function openPrivacyModal() { closeSettingsModal(); updateCloudPasswordStatus(); updateHideBirthdayStatus(); document.getElementById('privacy-modal').classList.remove('hidden'); }
+    function closePrivacyModal() { document.getElementById('privacy-modal').classList.add('hidden'); }
+    function updateCloudPasswordStatus() {
+      const user = authState.currentUser;
+      const el = document.getElementById('cloud-password-status');
+      if (user && user.cloud_password) { el.innerText = "Вкл."; el.className = "text-sm font-medium text-tgBlue"; }
+      else { el.innerText = "Выкл."; el.className = "text-sm font-medium text-tgSecondary"; }
+    }
+    function updateHideBirthdayStatus() {
+      const user = authState.currentUser;
+      const el = document.getElementById('hide-birthday-status');
+      if (user && user.hide_birthday) { el.innerText = "Вкл."; el.className = "text-sm font-medium text-tgBlue"; }
+      else { el.innerText = "Выкл."; el.className = "text-sm font-medium text-tgSecondary"; }
+    }
+    function toggleHideBirthday() {
+      const user = authState.currentUser; if (!user) return;
+      user.hide_birthday = !user.hide_birthday;
+      LOCAL_DB.users[user.phone] = user; authState.currentUser = user;
+      saveDatabase(); updateHideBirthdayStatus();
+    }
+    function toggleCloudPassword() { alert('Управление облачным паролем — в полной версии.'); }
+
+    function openPremiumModal() {
+      closeSettingsModal();
+      if (authState.currentUser.is_premium) { alert("Вы уже владеете YouGram Premium!"); return; }
+      authState.selectedPremium = 'yearly';
+      document.getElementById('premium-modal').classList.remove('hidden');
+    }
+    function closePremiumModal() { document.getElementById('premium-modal').classList.add('hidden'); }
+    function selectPremiumOption(opt) {
+      authState.selectedPremium = opt;
+      const y = document.getElementById('premium-yearly'); const m = document.getElementById('premium-monthly');
+      if (opt === 'yearly') {
+        y.classList.add('border-purple-400','bg-purple-500/10'); y.classList.remove('border-gray-300','dark:border-gray-700','bg-gray-100','dark:bg-tgInput');
+        m.classList.remove('border-purple-400','bg-purple-500/10'); m.classList.add('border-gray-300','dark:border-gray-700','bg-gray-100','dark:bg-tgInput');
+      } else {
+        m.classList.add('border-purple-400','bg-purple-500/10'); m.classList.remove('border-gray-300','dark:border-gray-700','bg-gray-100','dark:bg-tgInput');
+        y.classList.remove('border-purple-400','bg-purple-500/10'); y.classList.add('border-gray-300','dark:border-gray-700','bg-gray-100','dark:bg-tgInput');
+      }
+    }
+    function buyPremium() {
+      refreshDatabaseFromStorage();
+      const user = authState.currentUser;
+      if (user.is_premium) { alert("Вы уже владеете YouGram Premium!"); return; }
+      const price = authState.selectedPremium === 'yearly' ? 500 : 250;
+      if (!user.stars) user.stars = 0;
+      if (user.stars < price) { alert(`Недостаточно ⭐!`); return; }
+      user.stars -= price; user.is_premium = true;
+      LOCAL_DB.users[user.phone] = user; authState.currentUser = user;
+      saveDatabase(); closePremiumModal(); updateCurrentUserUI();
+      alert(`✅ Вы оформили YouGram Premium!`);
+    }
+    function showPremiumInfo(phone) {
+      const user = LOCAL_DB.users[phone];
+      if (!user || !user.is_premium) return;
+      document.getElementById('premium-info-title').innerText = `${user.first_name} является обладателем подписки YouGram Premium.`;
+      document.getElementById('premium-info-modal').classList.remove('hidden');
+    }
+    function closePremiumInfoModal() { document.getElementById('premium-info-modal').classList.add('hidden'); }
+
+    function openGiftPremiumModal() {
+      if (!authState.profileUser) return;
+      const target = authState.profileUser;
+      if (target.phone === authState.currentUser.phone) { alert("Нельзя подарить себе."); return; }
+      if (target.is_premium) { alert(`${target.first_name} уже владеет Premium!`); return; }
+      authState.giftPremiumOption = 'yearly';
+      document.getElementById('gift-premium-name').innerText = `${target.first_name} (@${target.username})`;
+      document.getElementById('gift-premium-error').classList.add('hidden');
+      document.getElementById('gift-premium-modal').classList.remove('hidden');
+    }
+    function closeGiftPremiumModal() { document.getElementById('gift-premium-modal').classList.add('hidden'); }
+    function selectGiftPremiumOption(opt) {
+      authState.giftPremiumOption = opt;
+      const y = document.getElementById('gift-premium-yearly'); const m = document.getElementById('gift-premium-monthly');
+      if (opt === 'yearly') {
+        y.classList.add('border-purple-400','bg-purple-500/10'); y.classList.remove('border-gray-300','dark:border-gray-700','bg-gray-100','dark:bg-tgInput');
+        m.classList.remove('border-purple-400','bg-purple-500/10'); m.classList.add('border-gray-300','dark:border-gray-700','bg-gray-100','dark:bg-tgInput');
+      } else {
+        m.classList.add('border-purple-400','bg-purple-500/10'); m.classList.remove('border-gray-300','dark:border-gray-700','bg-gray-100','dark:bg-tgInput');
+        y.classList.remove('border-purple-400','bg-purple-500/10'); y.classList.add('border-gray-300','dark:border-gray-700','bg-gray-100','dark:bg-tgInput');
+      }
+    }
+    function confirmGiftPremium() {
+      refreshDatabaseFromStorage();
+      const target = authState.profileUser;
+      const sender = LOCAL_DB.users[authState.currentUser.phone];
+      if (!target || !sender) return;
+      if (target.is_premium) { document.getElementById('gift-premium-error').innerText = "Уже владеет Premium!"; document.getElementById('gift-premium-error').classList.remove('hidden'); return; }
+      const price = authState.giftPremiumOption === 'yearly' ? 500 : 250;
+      if (!sender.stars) sender.stars = 0;
+      if (sender.stars < price) { document.getElementById('gift-premium-error').innerText = `Недостаточно ⭐!`; document.getElementById('gift-premium-error').classList.remove('hidden'); return; }
+      sender.stars -= price; target.is_premium = true;
+      LOCAL_DB.users[sender.phone] = sender; LOCAL_DB.users[target.phone] = target;
+      authState.currentUser = sender; saveDatabase();
+      closeGiftPremiumModal(); updateCurrentUserUI(); renderChats();
+      alert(`✅ Подарено Premium пользователю ${target.first_name}!`);
+    }
+
+    function openStarInfoModal() { refreshDatabaseFromStorage(); document.getElementById('star-info-balance').innerText = authState.currentUser.stars || 0; document.getElementById('star-info-modal').classList.remove('hidden'); }
+    function closeStarInfoModal() { document.getElementById('star-info-modal').classList.add('hidden'); }
+    function openStarClickerFromInfo() { closeStarInfoModal(); document.getElementById('clicker-balance').innerText = authState.currentUser.stars || 0; document.getElementById('star-clicker-modal').classList.remove('hidden'); }
+    function closeStarClicker() { document.getElementById('star-clicker-modal').classList.add('hidden'); }
+    function clickStar() {
+      refreshDatabaseFromStorage();
+      if (!authState.currentUser.stars) authState.currentUser.stars = 0;
+      authState.currentUser.stars += 1;
+      LOCAL_DB.users[authState.currentUser.phone] = authState.currentUser;
+      saveDatabase();
+      document.getElementById('clicker-balance').innerText = authState.currentUser.stars;
+    }
+
+    function openGiftModal() { document.getElementById('gift-text-input').value = ''; document.getElementById('gift-modal').classList.remove('hidden'); }
+    function closeGiftModal() { document.getElementById('gift-modal').classList.add('hidden'); }
+    function sendGift(name, cost, type) {
+      refreshDatabaseFromStorage();
+      if (!authState.currentUser.stars) authState.currentUser.stars = 0;
+      if (authState.currentUser.stars < cost) { alert(`Недостаточно ⭐!`); return; }
+      const giftText = document.getElementById('gift-text-input').value.trim();
+      authState.currentUser.stars -= cost;
+      LOCAL_DB.users[authState.currentUser.phone] = authState.currentUser;
+      if (!authState.activeChatUser) { alert('Откройте чат.'); return; }
+      if (!authState.activeChatUser.gifts) authState.activeChatUser.gifts = [];
+      const recipientTheme = authState.activeChatUser.theme || 'dark';
+      let imgSrc = '';
+      if (type === 'bear') imgSrc = (recipientTheme === 'light') ? 'Photo2.jpg' : 'Photo1.jpg';
+      else if (type === 'rose') imgSrc = (recipientTheme === 'light') ? 'Photo3.jpg' : 'Photo4.jpg';
+      else if (type === 'box') imgSrc = (recipientTheme === 'light') ? 'Photo6.jpg' : 'Photo5.jpg';
+      else if (type === 'cake') imgSrc = (recipientTheme === 'light') ? 'Photo8.jpg' : 'Photo7.jpg';
+      else if (type === 'cup') imgSrc = (recipientTheme === 'light') ? 'Photo10.jpg' : 'Photo9.jpg';
+      const giftObj = { imgSrc, name, type, text: giftText, timestamp: new Date().toISOString(), senderPhone: authState.currentUser.phone, senderName: `${authState.currentUser.first_name}`, senderAvatar: authState.currentUser.avatar, cost: cost };
+      authState.activeChatUser.gifts.push(giftObj);
+      LOCAL_DB.users[authState.activeChatUser.phone] = authState.activeChatUser;
+      const chatKey = getChatKey(authState.currentUser.phone, authState.activeChatUser.phone);
+      if (!LOCAL_DB.messages[chatKey]) LOCAL_DB.messages[chatKey] = [];
+      LOCAL_DB.messages[chatKey].push({ sender: authState.currentUser.phone, recipient: authState.activeChatUser.phone, text: `GIFT_CARD:${imgSrc}:${name}:${cost}`, isGiftCard: true, timestamp: new Date().toISOString(), giftData: giftObj, reactions: {} });
+      saveDatabase(); closeGiftModal(); lastRenderedCount = 0; renderMessages();
+    }
+
+    /* =========================================================================
+       ЗАГЛУШКИ
+       ========================================================================= */
+    function openEditAccountModal() { 
+      document.getElementById('edit-firstname').value = authState.currentUser.first_name || '';
+      document.getElementById('edit-lastname').value = authState.currentUser.last_name || '';
+      document.getElementById('edit-username').value = authState.currentUser.username || '';
+      document.getElementById('edit-birthday').value = authState.currentUser.birthday || '';
+      document.getElementById('edit-bio').value = authState.currentUser.bio || '';
+      document.getElementById('profile-modal').classList.remove('hidden'); 
+    }
+    function closeProfileModal() { document.getElementById('profile-modal').classList.add('hidden'); }
+    function saveProfileChanges() {
+      refreshDatabaseFromStorage();
+      const fn = document.getElementById('edit-firstname').value.trim();
+      const ln = document.getElementById('edit-lastname').value.trim();
+      const un = document.getElementById('edit-username').value.trim().toLowerCase();
+      const bd = document.getElementById('edit-birthday').value;
+      const bio = document.getElementById('edit-bio').value.trim();
+      if (!fn || !un) { alert('Заполните имя и username!'); return; }
+      if (isUsernameTaken(un, authState.currentUser.phone)) { alert('Этот username занят!'); return; }
+      authState.currentUser.first_name = fn; authState.currentUser.last_name = ln;
+      authState.currentUser.username = un; authState.currentUser.birthday = bd;
+      authState.currentUser.bio = bio;
+      LOCAL_DB.users[authState.currentUser.phone] = authState.currentUser;
+      saveDatabase(); updateCurrentUserUI(); renderChats(); closeProfileModal();
+    }
+    function handleAvatarUpload() {}
+    function removeAvatar() {}
+    function openAddUsernameModal() { alert('В полной версии.'); }
+    function closeAddUsernameModal() { document.getElementById('add-username-modal')?.classList.add('hidden'); }
+    function openGiftsModalForCurrentProfile() { alert('Галерея подарков — в полной версии.'); }
+    function promptBlockUser() { alert('Блокировка — в полной версии.'); }
+    function closeBlockModal() { document.getElementById('block-confirm-modal')?.classList.add('hidden'); }
+    function closeChatSettingsModal() { document.getElementById('chat-settings-modal')?.classList.add('hidden'); }
+    function openChatSettingsModal() { alert('Настройки чатов.'); }
+    function closeGiftsGalleryModal() { document.getElementById('gifts-gallery-modal')?.classList.add('hidden'); }
+    function closeSellGiftModal() { document.getElementById('sell-gift-modal')?.classList.add('hidden'); }
+    function closeGiftRecipientModal() { document.getElementById('gift-recipient-modal')?.classList.add('hidden'); }
+    function closeGiftSenderModal() { document.getElementById('gift-sender-modal')?.classList.add('hidden'); }
+    function closeCreateChatModal() { document.getElementById('create-chat-modal').classList.add('hidden'); }
+    function closeCreateChatDetailsModal() { document.getElementById('create-chat-details-modal').classList.add('hidden'); }
+    function closeChannelProfileModal() { document.getElementById('channel-profile-modal').classList.add('hidden'); }
+    function closeEditChannelModal() { document.getElementById('edit-channel-modal').classList.add('hidden'); }
+    function closeChannelSubscribersModal() { document.getElementById('channel-subscribers-modal').classList.add('hidden'); }
+    function closePremiumModal() { document.getElementById('premium-modal').classList.add('hidden'); }
+    function closePremiumInfoModal() { document.getElementById('premium-info-modal').classList.add('hidden'); }
+    function closeGiftPremiumModal() { document.getElementById('gift-premium-modal').classList.add('hidden'); }
+    function closeStarInfoModal() { document.getElementById('star-info-modal').classList.add('hidden'); }
+    function closeStarClicker() { document.getElementById('star-clicker-modal').classList.add('hidden'); }
+    function closeDeleteChatModal() { document.getElementById('delete-chat-modal').classList.add('hidden'); }
+    function confirmDeleteChat() { if (!authState.activeChatUser && !authState.activeChannel) return; authState.chatToDelete = authState.activeChannel ? 'channel_' + authState.activeChannel.id : authState.activeChatUser.phone; document.getElementById('delete-chat-modal').classList.remove('hidden'); }
+    function confirmDeleteChatAction() {
+      refreshDatabaseFromStorage();
+      if (!authState.chatToDelete) return;
+      if (LOCAL_DB.messages[authState.chatToDelete]) { delete LOCAL_DB.messages[authState.chatToDelete]; saveDatabase(); }
+      closeDeleteChatModal();
+      authState.activeChatUser = null; authState.activeChannel = null;
+      document.getElementById('empty-chat-state').classList.remove('hidden');
+      document.getElementById('chat-input-area').classList.add('hidden');
+      document.getElementById('delete-chat-btn').classList.add('hidden');
+      document.getElementById('active-chat-title').innerText = 'Выберите чат';
+      document.getElementById('active-chat-subtitle').innerText = 'Нажмите для профиля';
+      document.getElementById('active-chat-avatar').style.backgroundImage = '';
+      document.getElementById('active-chat-avatar').innerText = '?';
+      document.getElementById('messages-container').innerHTML = '';
+      renderChats();
+      alert('✅ Чат удалён.');
+    }
+  </script>
+</body>
+</html>
